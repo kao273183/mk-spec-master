@@ -20,7 +20,7 @@
 
 > Spec-driven testing over MCP. Turn Linear / JIRA / GitHub Issues / Notion / Figma / Markdown specs into runnable scenarios, hand off to any test runner via [`mk-qa-master`](https://github.com/kao273183/mk-qa-master), and keep a live spec ↔ test coverage matrix.
 
-> **🟢 Alpha — v0.2 partial.** 11 tools shipped (coverage matrix + spec-quality coach + drift report). Full design in [`docs/prd.md`](docs/prd.md). Next in v0.2: Linear / JIRA adapters.
+> **🟢 Alpha — v0.2 complete.** 11 tools + 4 adapters (markdown_local, github_issues, linear, jira). Full design in [`docs/prd.md`](docs/prd.md). v0.3 next: Notion, Figma, auto-link via test docstrings, optimization plan.
 
 ---
 
@@ -93,11 +93,11 @@ Still pending for full v0.2: Linear / JIRA adapters.
 | `markdown_local` | Local `*.md` with YAML-ish frontmatter | ✅ since 0.1.0 | none |
 | `github_issues` | GitHub Issues via `gh` CLI | ✅ since 0.1.0 | `gh auth login` or `GITHUB_TOKEN` |
 | `linear` | Linear API (GraphQL) | ✅ since 0.2.2 | `LINEAR_API_KEY` + `SPEC_PROJECT_KEY=<team-key>` (optional) |
-| `jira` | JIRA Cloud / Server | ⏳ pending — v0.2.x | `JIRA_API_TOKEN` + `JIRA_BASE_URL` |
+| `jira` | JIRA Cloud (REST v3, ADF → markdown) | ✅ since 0.2.3 | `JIRA_BASE_URL` + `JIRA_EMAIL` + `JIRA_API_TOKEN` + `SPEC_PROJECT_KEY=<project-key>` (optional) |
 | `notion` | Notion databases | ⏳ planned — v0.3 | `NOTION_TOKEN` |
 | `figma` | Figma annotations + comments | ⏳ planned — v0.3 | `FIGMA_TOKEN` |
 
-> v0.2.0 shipped the coverage matrix + spec-quality coach. v0.2.1 added drift report. v0.2.2 adds the Linear adapter. JIRA follows in 0.2.3.
+> v0.2 complete in 0.2.3: coverage matrix (0.2.0) + spec-quality coach (0.2.0) + drift report (0.2.1) + Linear adapter (0.2.2) + JIRA adapter (0.2.3). v0.3 brings Notion / Figma / auto-link.
 
 ## Walkthrough — spec → test → coverage
 
@@ -130,7 +130,7 @@ The traceability index now records all 4 links. Next sprint, when the spec chang
 | Milestone | Target | Status |
 |---|---|---|
 | v0.1 (MVP — markdown_local + github_issues, 7 tools) | June 2026 | ✅ Shipped |
-| v0.2 (Linear, JIRA, coverage matrix, spec-quality coach, drift report) | Aug 2026 | 🟡 Coverage matrix + coach + drift report + Linear shipped (0.2.2); JIRA pending |
+| v0.2 (Linear, JIRA, coverage matrix, spec-quality coach, drift report) | Aug 2026 | ✅ Complete (0.2.3) |
 | v0.3 (Notion, Figma, auto-link, optimization plan) | Oct 2026 | ⬜ |
 | v1.0 (production-ready, docs, integration recipes) | Q4 2026 | ⬜ |
 

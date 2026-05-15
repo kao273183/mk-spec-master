@@ -16,6 +16,7 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 LINEAR_API_KEY = os.getenv("LINEAR_API_KEY", "")
 JIRA_API_TOKEN = os.getenv("JIRA_API_TOKEN", "")
 JIRA_BASE_URL = os.getenv("JIRA_BASE_URL", "")
+JIRA_EMAIL = os.getenv("JIRA_EMAIL", "")
 NOTION_TOKEN = os.getenv("NOTION_TOKEN", "")
 FIGMA_TOKEN = os.getenv("FIGMA_TOKEN", "")
 
