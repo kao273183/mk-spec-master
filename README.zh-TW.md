@@ -92,12 +92,12 @@ v0.2 還在做的：Linear / JIRA adapter。
 |---|---|---|---|
 | `markdown_local` | 本地 `*.md`，frontmatter 帶 metadata | ✅ 0.1.0 起 | 不用 |
 | `github_issues` | GitHub Issues，走 `gh` CLI | ✅ 0.1.0 起 | `gh auth login` 或 `GITHUB_TOKEN` |
-| `linear` | Linear API | ⏳ 待補 — v0.2.x | `LINEAR_API_KEY` |
+| `linear` | Linear API（GraphQL） | ✅ 0.2.2 起 | `LINEAR_API_KEY` + `SPEC_PROJECT_KEY=<團隊代碼>`（選填） |
 | `jira` | JIRA Cloud / Server | ⏳ 待補 — v0.2.x | `JIRA_API_TOKEN` + `JIRA_BASE_URL` |
 | `notion` | Notion databases | ⏳ 規劃中 — v0.3 | `NOTION_TOKEN` |
 | `figma` | Figma 註解 + comments | ⏳ 規劃中 — v0.3 | `FIGMA_TOKEN` |
 
-> v0.2.0 ship 的是覆蓋矩陣 + 規格品質教練 tools，沒有新 adapter。Linear / JIRA adapter 排在後續 0.2.x。
+> v0.2.0 ship 覆蓋矩陣 + 教練；v0.2.1 加 drift report；v0.2.2 加 Linear adapter；JIRA 接著在 0.2.3。
 
 ## 範例流程——spec → test → coverage
 
@@ -130,7 +130,7 @@ Traceability index 已記下 4 條對應。下個 sprint 規格改了時，v0.2 
 | 里程碑 | 目標 | 狀態 |
 |---|---|---|
 | v0.1（MVP — markdown_local + github_issues、7 tools） | 2026/06 | ✅ Shipped |
-| v0.2（Linear、JIRA、覆蓋矩陣、規格品質教練、drift report） | 2026/08 | 🟡 覆蓋矩陣 + 教練 + drift report 已 ship（0.2.1）；Linear / JIRA 待補 |
+| v0.2（Linear、JIRA、覆蓋矩陣、規格品質教練、drift report） | 2026/08 | 🟡 覆蓋矩陣 + 教練 + drift report + Linear 已 ship（0.2.2）；JIRA 待補 |
 | v0.3（Notion、Figma、自動 link、optimization plan） | 2026/10 | ⬜ |
 | v1.0（production-ready、完整文件、整合範例） | 2026 Q4 | ⬜ |
 

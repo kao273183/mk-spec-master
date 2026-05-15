@@ -24,3 +24,4 @@ def get_source(name: str) -> SpecSource:
 # Side-effect imports register the concrete adapters into REGISTRY.
 from . import markdown_local  # noqa: E402, F401
 from . import github_issues  # noqa: E402, F401
+from . import linear  # noqa: E402, F401
