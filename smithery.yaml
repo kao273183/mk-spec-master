@@ -1,0 +1,49 @@
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    required:
+      - specSource
+      - specProjectRoot
+    properties:
+      specSource:
+        type: string
+        title: Spec source
+        description: >-
+          Which spec backend to read from. markdown_local reads .md files from
+          SPEC_PROJECT_ROOT; github_issues uses the GitHub API. Linear / JIRA /
+          Notion / Figma adapters arrive in later versions.
+        enum:
+          - markdown_local
+          - github_issues
+        default: markdown_local
+      specProjectRoot:
+        type: string
+        title: Project root (absolute path)
+        description: >-
+          Absolute path where the traceability index
+          (.mk-spec-master/index.json) and any local spec files live.
+          Example: /Users/you/work/my-app
+      specProjectKey:
+        type: string
+        title: Source-specific key (optional)
+        description: >-
+          For github_issues this is `owner/repo`. For markdown_local it is
+          ignored. Future adapters use it for team / board / database IDs.
+      githubToken:
+        type: string
+        title: GitHub token (optional)
+        description: >-
+          Personal access token for the github_issues adapter. If unset, falls
+          back to `gh auth token` on PATH.
+  commandFunction: |-
+    (config) => ({
+      command: "uvx",
+      args: ["mk-spec-master"],
+      env: {
+        SPEC_SOURCE: config.specSource,
+        SPEC_PROJECT_ROOT: config.specProjectRoot,
+        ...(config.specProjectKey ? { SPEC_PROJECT_KEY: config.specProjectKey } : {}),
+        ...(config.githubToken ? { GITHUB_TOKEN: config.githubToken } : {})
+      }
+    })

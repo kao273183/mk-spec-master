@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "mk-spec-master": {
+      "command": "uvx",
+      "args": ["mk-spec-master"],
+      "env": {
+        "SPEC_SOURCE": "markdown_local",
+        "SPEC_PROJECT_ROOT": "/absolute/path/to/your/project"
+      }
+    },
+    "mk-qa-master": {
+      "command": "uvx",
+      "args": ["mk-qa-master"],
+      "env": {
+        "QA_RUNNER": "pytest",
+        "QA_PROJECT_ROOT": "/absolute/path/to/your/project"
+      }
+    }
+  }
+}
