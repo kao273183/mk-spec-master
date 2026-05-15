@@ -202,3 +202,175 @@ def test_propose_clean_spec_says_no_issues():
 
     assert "No issues" in result["markdown"]
     assert result["actions"] == []
+
+
+
+# ---------- get_drift_report -------------------------------------------
+
+
+def _set_tmp_project(tmp_path, monkeypatch):
+    """Point SPECS_DIR and INDEX paths at a fresh tmp_path. Returns the
+    specs subdir for writing fixture spec files."""
+    from mk_spec_master import config
+
+    specs_dir = tmp_path / "specs"
+    index_dir = tmp_path / ".mk-spec-master"
+    index_path = index_dir / "index.json"
+    specs_dir.mkdir()
+
+    monkeypatch.setattr(config, "SPECS_DIR", specs_dir)
+    monkeypatch.setattr(config, "INDEX_DIR", index_dir)
+    monkeypatch.setattr(config, "INDEX_PATH", index_path)
+
+    # adapters.markdown_local imported SPECS_DIR at module load — re-patch
+    # there too so list_specs / fetch read the new path.
+    from mk_spec_master.adapters import markdown_local
+    monkeypatch.setattr(markdown_local, "SPECS_DIR", specs_dir)
+    return specs_dir
+
+
+SPEC_V1 = """---
+id: DRIFT-001
+title: Sample
+---
+
+## Acceptance criteria
+1. The user can log in
+2. The user can log out
+"""
+
+SPEC_V1_PROSE_TWEAK = """---
+id: DRIFT-001
+title: Sample (re-worded intro)
+---
+
+This sentence rewords the lead-in but the AC list is identical.
+
+## Acceptance criteria
+1. The user can log in
+2. The user can log out
+"""
+
+SPEC_V2_NEW_AC = """---
+id: DRIFT-001
+title: Sample
+---
+
+## Acceptance criteria
+1. The user can log in
+2. The user can log out
+3. The user can reset their password
+"""
+
+
+def test_drift_fresh_when_hash_matches(tmp_path, monkeypatch):
+    specs_dir = _set_tmp_project(tmp_path, monkeypatch)
+    (specs_dir / "DRIFT-001.md").write_text(SPEC_V1, encoding="utf-8")
+
+    from mk_spec_master.tools.specs import parse_spec_tool
+    from mk_spec_master.tools.coverage import link_test_to_spec_tool, get_drift_report_tool
+
+    parsed = parse_spec_tool({"spec_id": "DRIFT-001"})
+    ac_hash = parsed["_meta"]["ac_hash"]
+    assert ac_hash  # parse_spec exposes the hash
+
+    link_test_to_spec_tool(
+        {
+            "spec_id": "DRIFT-001",
+            "test_node_id": "tests/test_auth.py::test_login",
+            "ac_hash": ac_hash,
+        }
+    )
+
+    report = get_drift_report_tool({})
+    assert report["fresh_count"] == 1
+    assert report["drifted_count"] == 0
+
+
+def test_drift_ignores_prose_only_edits(tmp_path, monkeypatch):
+    """Hashing only the AC block means rewording the surrounding prose
+    must not flag drift — that's the whole point of canonical hashing."""
+    specs_dir = _set_tmp_project(tmp_path, monkeypatch)
+    (specs_dir / "DRIFT-001.md").write_text(SPEC_V1, encoding="utf-8")
+
+    from mk_spec_master.tools.specs import parse_spec_tool
+    from mk_spec_master.tools.coverage import link_test_to_spec_tool, get_drift_report_tool
+
+    parsed = parse_spec_tool({"spec_id": "DRIFT-001"})
+    link_test_to_spec_tool(
+        {"spec_id": "DRIFT-001", "test_node_id": "tests/x.py::t", "ac_hash": parsed["_meta"]["ac_hash"]}
+    )
+
+    (specs_dir / "DRIFT-001.md").write_text(SPEC_V1_PROSE_TWEAK, encoding="utf-8")
+
+    report = get_drift_report_tool({})
+    assert report["fresh_count"] == 1
+    assert report["drifted_count"] == 0
+
+
+def test_drift_flags_new_ac(tmp_path, monkeypatch):
+    specs_dir = _set_tmp_project(tmp_path, monkeypatch)
+    (specs_dir / "DRIFT-001.md").write_text(SPEC_V1, encoding="utf-8")
+
+    from mk_spec_master.tools.specs import parse_spec_tool
+    from mk_spec_master.tools.coverage import link_test_to_spec_tool, get_drift_report_tool
+
+    parsed = parse_spec_tool({"spec_id": "DRIFT-001"})
+    link_test_to_spec_tool(
+        {"spec_id": "DRIFT-001", "test_node_id": "tests/x.py::t", "ac_hash": parsed["_meta"]["ac_hash"]}
+    )
+
+    # Add a new AC — drift expected.
+    (specs_dir / "DRIFT-001.md").write_text(SPEC_V2_NEW_AC, encoding="utf-8")
+
+    report = get_drift_report_tool({})
+    assert report["drifted_count"] == 1
+    assert report["fresh_count"] == 0
+    assert report["drifted"][0]["spec_id"] == "DRIFT-001"
+    assert "may be stale" in report["markdown"] or "Drifted" in report["markdown"]
+
+
+def test_drift_unknown_when_no_hash_stored(tmp_path, monkeypatch):
+    specs_dir = _set_tmp_project(tmp_path, monkeypatch)
+    (specs_dir / "DRIFT-001.md").write_text(SPEC_V1, encoding="utf-8")
+
+    from mk_spec_master.tools.coverage import link_test_to_spec_tool, get_drift_report_tool
+
+    # Link without ac_hash — emulates v0.1-era data or a client that
+    # didn't compute the hash.
+    link_test_to_spec_tool({"spec_id": "DRIFT-001", "test_node_id": "tests/x.py::t"})
+
+    report = get_drift_report_tool({})
+    assert report["unknown_count"] == 1
+    assert report["drifted_count"] == 0
+    assert "Unknown" in report["markdown"]
+
+
+def test_drift_stranded_when_source_missing(tmp_path, monkeypatch):
+    _set_tmp_project(tmp_path, monkeypatch)
+    # Do not write any spec file. Linking with ac_hash for a non-existent
+    # spec means get_drift_report can't fetch it → stranded.
+
+    from mk_spec_master.tools.coverage import link_test_to_spec_tool, get_drift_report_tool
+
+    link_test_to_spec_tool(
+        {"spec_id": "GHOST-999", "test_node_id": "tests/x.py::t", "ac_hash": "deadbeef" * 8}
+    )
+
+    report = get_drift_report_tool({})
+    assert report["stranded_count"] == 1
+    assert report["fresh_count"] == 0
+    assert report["stranded"][0]["spec_id"] == "GHOST-999"
+
+
+def test_compute_ac_hash_stable_and_unique():
+    from mk_spec_master.tools.specs import compute_ac_hash
+
+    # Same AC list → identical hash, even with surrounding prose changes.
+    h1 = compute_ac_hash(SPEC_V1.split("---", 2)[2])
+    h2 = compute_ac_hash(SPEC_V1_PROSE_TWEAK.split("---", 2)[2])
+    assert h1 == h2
+
+    # New AC → different hash.
+    h3 = compute_ac_hash(SPEC_V2_NEW_AC.split("---", 2)[2])
+    assert h3 != h1

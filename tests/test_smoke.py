@@ -176,4 +176,4 @@ def test_server_dispatch_table_covers_all_seven_tools():
         f"declared - dispatched = {declared - dispatched}; "
         f"dispatched - declared = {dispatched - declared}"
     )
-    assert len(declared) == 10  # v0.2: original 7 + coverage_matrix + analyze + propose
+    assert len(declared) == 11  # v0.2.1: + get_drift_report

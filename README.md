@@ -20,7 +20,7 @@
 
 > Spec-driven testing over MCP. Turn Linear / JIRA / GitHub Issues / Notion / Figma / Markdown specs into runnable scenarios, hand off to any test runner via [`mk-qa-master`](https://github.com/kao273183/mk-qa-master), and keep a live spec ↔ test coverage matrix.
 
-> **🟢 Alpha — v0.2 partial.** 10 tools shipped (coverage matrix + spec-quality coach added). Full design in [`docs/prd.md`](docs/prd.md). Next in v0.2: Linear / JIRA adapters + drift report.
+> **🟢 Alpha — v0.2 partial.** 11 tools shipped (coverage matrix + spec-quality coach + drift report). Full design in [`docs/prd.md`](docs/prd.md). Next in v0.2: Linear / JIRA adapters.
 
 ---
 
@@ -82,8 +82,9 @@ See [`docs/prd.md` §4](docs/prd.md) for the full positioning.
 | `get_coverage_matrix` | **v0.2** | Spec × test grid — answer "which specs have no tests" in one call |
 | `analyze_spec_quality` | **v0.2** | Heuristic coach — flags vague language, implementation-leak AC, unclear role refs (the differentiator vs Kiro / Spec Kit) |
 | `propose_spec_improvements` | **v0.2** | Take analyze output → PM-facing markdown with concrete rewrites |
+| `get_drift_report` | **v0.2.1** | For every spec with a stored ac_hash, fetch live + recompute + compare. Buckets results into fresh / drifted / unknown / stranded |
 
-Still pending for full v0.2: `get_drift_report` + Linear / JIRA adapters.
+Still pending for full v0.2: Linear / JIRA adapters.
 
 ## Adapter status
 
@@ -129,7 +130,7 @@ The traceability index now records all 4 links. Next sprint, when the spec chang
 | Milestone | Target | Status |
 |---|---|---|
 | v0.1 (MVP — markdown_local + github_issues, 7 tools) | June 2026 | ✅ Shipped |
-| v0.2 (Linear, JIRA, coverage matrix, spec-quality coach) | Aug 2026 | 🟡 Coverage matrix + coach shipped (0.2.0); Linear / JIRA + drift report pending |
+| v0.2 (Linear, JIRA, coverage matrix, spec-quality coach, drift report) | Aug 2026 | 🟡 Coverage matrix + coach + drift report shipped (0.2.1); Linear / JIRA pending |
 | v0.3 (Notion, Figma, auto-link, optimization plan) | Oct 2026 | ⬜ |
 | v1.0 (production-ready, docs, integration recipes) | Q4 2026 | ⬜ |
 

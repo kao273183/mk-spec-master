@@ -7,7 +7,10 @@ users can answer the killer question: "which specs have tests?".
 import datetime as _dt
 from typing import Any
 
+from ..adapters import get_source
+from ..config import SOURCE_NAME
 from ..index import load_index, save_index
+from . import specs as specs_tools
 
 
 def _now_iso() -> str:
@@ -22,10 +25,13 @@ def link_test_to_spec_tool(arguments: dict) -> dict[str, Any]:
 
     # Optional metadata — AI clients usually have these from list_specs /
     # fetch_spec earlier in the chain. Pass them in and the coverage
-    # matrix renders titles without re-fetching from the source.
+    # matrix renders titles without re-fetching from the source. ac_hash
+    # is the snapshot the drift report compares against; pass it from
+    # parse_spec's _meta.ac_hash.
     spec_title = arguments.get("spec_title")
     spec_source = arguments.get("spec_source")
     spec_url = arguments.get("spec_url")
+    ac_hash = arguments.get("ac_hash")
 
     index = load_index()
     specs = index.setdefault("specs", {})
@@ -41,6 +47,8 @@ def link_test_to_spec_tool(arguments: dict) -> dict[str, Any]:
         entry["source"] = spec_source
     if spec_url:
         entry["url"] = spec_url
+    if ac_hash:
+        entry["ac_hash"] = ac_hash
     entry.setdefault("last_synced", _now_iso())
 
     existing = next(
@@ -141,4 +149,129 @@ def get_coverage_matrix_tool(arguments: dict) -> dict[str, Any]:
         "orphan_count": len(orphans),
         "rows": rows,
         "markdown": "\n".join(md_lines),
+    }
+
+
+# --- drift report ------------------------------------------------------
+
+
+def get_drift_report_tool(arguments: dict) -> dict[str, Any]:
+    """For every spec that has a stored ac_hash, fetch the live spec via
+    the active adapter, recompute its ac_hash, and compare. Four buckets:
+
+    - fresh:    stored == current → tests are still aligned with the spec
+    - drifted:  stored != current → spec moved; linked tests may be stale
+    - unknown:  no ac_hash stored (linked before this release, or without
+                ac_hash arg) → re-link to enable drift detection
+    - stranded: spec_id can't be fetched (deleted file, closed issue,
+                source mismatch) → either remove from index or fix the source
+
+    Optional argument: spec_id filters to a single spec.
+    """
+    only_spec = arguments.get("spec_id")
+
+    index = load_index()
+    specs_map: dict = index.get("specs", {}) or {}
+
+    try:
+        source = get_source(SOURCE_NAME)
+    except Exception as exc:
+        return {"error": f"adapter unavailable: {exc}"}
+
+    fresh: list[dict] = []
+    drifted: list[dict] = []
+    unknown: list[dict] = []
+    stranded: list[dict] = []
+
+    for spec_id, entry in specs_map.items():
+        if only_spec and spec_id != only_spec:
+            continue
+
+        linked_count = len(entry.get("linked_tests") or [])
+        stored_hash = entry.get("ac_hash")
+
+        if not stored_hash:
+            unknown.append(
+                {
+                    "spec_id": spec_id,
+                    "title": entry.get("title") or "",
+                    "linked_tests": linked_count,
+                    "reason": "no_hash_stored",
+                }
+            )
+            continue
+
+        try:
+            spec = source.fetch(spec_id)
+        except Exception as exc:
+            stranded.append(
+                {
+                    "spec_id": spec_id,
+                    "title": entry.get("title") or "",
+                    "linked_tests": linked_count,
+                    "reason": str(exc),
+                }
+            )
+            continue
+
+        current_hash = specs_tools.compute_ac_hash(spec.body)
+        if current_hash == stored_hash:
+            fresh.append({"spec_id": spec_id, "linked_tests": linked_count})
+        else:
+            drifted.append(
+                {
+                    "spec_id": spec_id,
+                    "title": entry.get("title") or spec.title,
+                    "stored_hash": stored_hash[:12],
+                    "current_hash": current_hash[:12],
+                    "linked_test_node_ids": [t.get("node_id", "") for t in entry.get("linked_tests") or []],
+                }
+            )
+
+    orphans = index.get("orphans") or []
+
+    # --- Markdown summary ---
+    md = [
+        "# Drift report",
+        "",
+        f"- Specs tracked: {len(specs_map)}",
+        f"- 🟢 Fresh: {len(fresh)}",
+        f"- 🔴 Drifted: {len(drifted)}",
+        f"- ⚪ Unknown (no ac_hash stored): {len(unknown)}",
+        f"- 🚫 Stranded (spec_id can't be fetched): {len(stranded)}",
+        f"- 🟡 Orphan tests: {len(orphans)}",
+    ]
+
+    if drifted:
+        md += ["", "## 🔴 Drifted — re-run extract_scenarios + update linked tests", ""]
+        for d in drifted:
+            md.append(f"- `{d['spec_id']}` — {d.get('title') or ''}")
+            md.append(f"  - stored hash `{d['stored_hash']}` → current `{d['current_hash']}`")
+            for node in d["linked_test_node_ids"]:
+                md.append(f"  - linked test may be stale: `{node}`")
+
+    if unknown:
+        md += ["", "## ⚪ Unknown — re-link with ac_hash to enable drift detection", ""]
+        for u in unknown:
+            md.append(f"- `{u['spec_id']}` — {u.get('title') or ''} ({u['linked_tests']} test(s) linked)")
+
+    if stranded:
+        md += ["", "## 🚫 Stranded — fix the source or remove from index", ""]
+        for s in stranded:
+            md.append(f"- `{s['spec_id']}` — {s.get('title') or ''}")
+            md.append(f"  - reason: {s['reason']}")
+
+    return {
+        "source": SOURCE_NAME,
+        "fresh_count": len(fresh),
+        "drifted_count": len(drifted),
+        "unknown_count": len(unknown),
+        "stranded_count": len(stranded),
+        "orphan_count": len(orphans),
+        "drifted": drifted,
+        "unknown": unknown,
+        "stranded": stranded,
+        "fresh": fresh,
+        "orphans": orphans,
+        "markdown": "\n".join(md),
     }

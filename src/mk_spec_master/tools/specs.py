@@ -6,6 +6,7 @@ section heading and pulls numbered / bulleted items beneath it. Roles +
 preconditions stay empty in v0.1; v0.2's spec-quality coach fills them.
 """
 
+import hashlib
 import re
 from dataclasses import asdict
 from typing import Any
@@ -61,6 +62,23 @@ def _ac_items(block: str) -> list[str]:
     return [m.group(1).strip() for m in _LIST_ITEM_RE.finditer(block)]
 
 
+def compute_ac_hash(body: str) -> str:
+    """SHA-256 over the canonical (whitespace-normalised) AC list.
+
+    Hash inputs deliberately exclude prose around the AC list so the
+    drift signal isn't a false positive for unrelated edits (e.g.,
+    rewriting the 'Context' or 'Notes for QA' section without touching
+    the AC). If there's no AC heading at all, hash the full body.
+    """
+    ac_block = _extract_ac_block(body)
+    items = _ac_items(ac_block)
+    if items:
+        canonical = "\n".join(item.strip() for item in items)
+    else:
+        canonical = body.strip()
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def list_specs_tool(arguments: dict) -> dict:
     source = get_source(SOURCE_NAME)
     filters = {k: v for k, v in arguments.items() if v is not None}
@@ -114,5 +132,6 @@ def parse_spec_tool(arguments: dict) -> dict[str, Any]:
         "_meta": {
             "ac_block_found": bool(ac_block.strip()),
             "ac_count": len(acceptance_criteria),
+            "ac_hash": compute_ac_hash(body),
         },
     }
