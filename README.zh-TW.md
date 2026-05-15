@@ -20,7 +20,7 @@
 
 > 一個 spec-driven testing 的 MCP server。把 Linear / JIRA / GitHub Issues / Notion / Figma / Markdown 上的規格轉成可執行的測試場景、交給 [`mk-qa-master`](https://github.com/kao273183/mk-qa-master) 或任何測試 runner，並維持一份即時的 spec ↔ test 覆蓋矩陣。
 
-> **🟢 Alpha — v0.2 partial。** 10 個 tool 已上線（覆蓋矩陣 + 規格品質教練）。完整設計見 [`docs/prd.md`](docs/prd.md)。v0.2 還缺 Linear / JIRA adapter + drift report。
+> **🟢 Alpha — v0.2 partial。** 11 個 tool 已上線（覆蓋矩陣 + 規格品質教練 + drift report）。完整設計見 [`docs/prd.md`](docs/prd.md)。v0.2 還缺 Linear / JIRA adapter。
 
 ---
 
@@ -82,8 +82,9 @@ MCP client config 加上：
 | `get_coverage_matrix` | **v0.2** | spec × test 覆蓋矩陣——一次回答「哪些 spec 沒被測」 |
 | `analyze_spec_quality` | **v0.2** | 啟發式教練——抓模糊用詞、實作細節洩漏、未定義的角色（這就是相對 Kiro / Spec Kit 的差異化護城河） |
 | `propose_spec_improvements` | **v0.2** | 把 analyze 輸出整理成 PM 可直接照做的 markdown 改寫建議 |
+| `get_drift_report` | **v0.2.1** | 對每個有存 ac_hash 的 spec 重新 fetch 比對，分 fresh / drifted / unknown / stranded 四格 |
 
-v0.2 還在做的：`get_drift_report` + Linear / JIRA adapter。
+v0.2 還在做的：Linear / JIRA adapter。
 
 ## Adapter 狀態
 
@@ -129,7 +130,7 @@ Traceability index 已記下 4 條對應。下個 sprint 規格改了時，v0.2 
 | 里程碑 | 目標 | 狀態 |
 |---|---|---|
 | v0.1（MVP — markdown_local + github_issues、7 tools） | 2026/06 | ✅ Shipped |
-| v0.2（Linear、JIRA、覆蓋矩陣、規格品質教練） | 2026/08 | 🟡 覆蓋矩陣 + 教練已 ship（0.2.0）；Linear / JIRA + drift report 待補 |
+| v0.2（Linear、JIRA、覆蓋矩陣、規格品質教練、drift report） | 2026/08 | 🟡 覆蓋矩陣 + 教練 + drift report 已 ship（0.2.1）；Linear / JIRA 待補 |
 | v0.3（Notion、Figma、自動 link、optimization plan） | 2026/10 | ⬜ |
 | v1.0（production-ready、完整文件、整合範例） | 2026 Q4 | ⬜ |
 

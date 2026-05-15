@@ -41,6 +41,7 @@ _DISPATCH: dict[str, Callable[[dict], dict]] = {
     "generate_test_plan": scenarios_tools.generate_test_plan_tool,
     "link_test_to_spec": coverage_tools.link_test_to_spec_tool,
     "get_coverage_matrix": coverage_tools.get_coverage_matrix_tool,
+    "get_drift_report": coverage_tools.get_drift_report_tool,
     "analyze_spec_quality": quality_tools.analyze_spec_quality_tool,
     "propose_spec_improvements": quality_tools.propose_spec_improvements_tool,
 }
@@ -178,7 +179,9 @@ async def list_tools() -> list[Tool]:
                 "matrix stays current. Pass `spec_title` / `spec_source` / "
                 "`spec_url` (typically already known from earlier fetch_spec) "
                 "to cache them into the index so get_coverage_matrix can "
-                "render titles without re-fetching from the source. "
+                "render titles without re-fetching from the source. Pass "
+                "`ac_hash` (from parse_spec._meta.ac_hash) to enable drift "
+                "detection via get_drift_report. "
                 "Returns {action: 'added'|'updated', spec_id, test_node_id, "
                 "total_links_for_spec}."
             ),
@@ -193,6 +196,10 @@ async def list_tools() -> list[Tool]:
                     "spec_title": {"type": "string"},
                     "spec_source": {"type": "string"},
                     "spec_url": {"type": "string"},
+                    "ac_hash": {
+                        "type": "string",
+                        "description": "SHA-256 of the canonical AC block, as returned by parse_spec._meta.ac_hash. Enables drift detection.",
+                    },
                 },
                 "required": ["spec_id", "test_node_id"],
             },
@@ -215,6 +222,29 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "min_tests": {"type": "integer", "default": 0},
                     "include_orphans": {"type": "boolean", "default": True},
+                },
+            },
+        ),
+        Tool(
+            name="get_drift_report",
+            description=(
+                "For every spec in the index that has a stored ac_hash, "
+                "fetch the live spec via the active adapter and recompute "
+                "its ac_hash to detect drift. Buckets the results into "
+                "fresh (no drift), drifted (linked tests may be stale), "
+                "unknown (no hash stored — re-link with ac_hash from "
+                "parse_spec._meta.ac_hash to enable), and stranded "
+                "(spec_id can no longer be fetched — deleted, closed, or "
+                "source mismatch). "
+                "Use when a user asks 'has anything changed' / 'what's "
+                "out of sync' / 'is my test suite still aligned with "
+                "specs'. Optional `spec_id` narrows the check to one spec. "
+                "Returns counts + per-bucket details + markdown summary."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "spec_id": {"type": "string"},
                 },
             },
         ),
