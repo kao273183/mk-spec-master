@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/status-pre--alpha-orange.svg" alt="Status: Pre-alpha" />
 </p>
 
-> **⚠️ Pre-alpha skeleton.** Architecture and PRD defined in [`docs/prd.md`](docs/prd.md). No MVP functionality shipped yet. First release target: 4 weeks from scaffold (mid-June 2026).
+> **⚠️ Alpha — v0.1 MVP.** 7 tools shipped (markdown_local + github_issues sources). Full design in [`docs/prd.md`](docs/prd.md). Next: Linear / JIRA adapters + coverage matrix in v0.2.
 
 ---
 
@@ -34,7 +34,7 @@ See [`docs/prd.md` §4](docs/prd.md) for the full positioning.
 
 | Milestone | Target | Status |
 |---|---|---|
-| v0.1 (MVP — markdown_local + github_issues, 7 tools) | June 2026 | 🟡 In progress |
+| v0.1 (MVP — markdown_local + github_issues, 7 tools) | June 2026 | ✅ Shipped |
 | v0.2 (Linear, JIRA, coverage matrix, spec-quality coach) | Aug 2026 | ⬜ |
 | v0.3 (Notion, Figma, auto-link, optimization plan) | Oct 2026 | ⬜ |
 | v1.0 (production-ready, docs, integration recipes) | Q4 2026 | ⬜ |
