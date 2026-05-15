@@ -20,7 +20,7 @@
 
 > 一個 spec-driven testing 的 MCP server。把 Linear / JIRA / GitHub Issues / Notion / Figma / Markdown 上的規格轉成可執行的測試場景、交給 [`mk-qa-master`](https://github.com/kao273183/mk-qa-master) 或任何測試 runner，並維持一份即時的 spec ↔ test 覆蓋矩陣。
 
-> **🟢 Alpha — v0.2 partial。** 11 個 tool 已上線（覆蓋矩陣 + 規格品質教練 + drift report）。完整設計見 [`docs/prd.md`](docs/prd.md)。v0.2 還缺 Linear / JIRA adapter。
+> **🟢 Alpha — v0.2 完成。** 11 個 tool + 4 個 adapter（markdown_local、github_issues、linear、jira）。完整設計見 [`docs/prd.md`](docs/prd.md)。v0.3 接著做：Notion、Figma、auto-link via docstring、optimization plan。
 
 ---
 
@@ -93,11 +93,11 @@ v0.2 還在做的：Linear / JIRA adapter。
 | `markdown_local` | 本地 `*.md`，frontmatter 帶 metadata | ✅ 0.1.0 起 | 不用 |
 | `github_issues` | GitHub Issues，走 `gh` CLI | ✅ 0.1.0 起 | `gh auth login` 或 `GITHUB_TOKEN` |
 | `linear` | Linear API（GraphQL） | ✅ 0.2.2 起 | `LINEAR_API_KEY` + `SPEC_PROJECT_KEY=<團隊代碼>`（選填） |
-| `jira` | JIRA Cloud / Server | ⏳ 待補 — v0.2.x | `JIRA_API_TOKEN` + `JIRA_BASE_URL` |
+| `jira` | JIRA Cloud（REST v3、ADF → markdown） | ✅ 0.2.3 起 | `JIRA_BASE_URL` + `JIRA_EMAIL` + `JIRA_API_TOKEN` + `SPEC_PROJECT_KEY=<專案 key>`（選填） |
 | `notion` | Notion databases | ⏳ 規劃中 — v0.3 | `NOTION_TOKEN` |
 | `figma` | Figma 註解 + comments | ⏳ 規劃中 — v0.3 | `FIGMA_TOKEN` |
 
-> v0.2.0 ship 覆蓋矩陣 + 教練；v0.2.1 加 drift report；v0.2.2 加 Linear adapter；JIRA 接著在 0.2.3。
+> v0.2 在 0.2.3 完成：覆蓋矩陣（0.2.0）+ 教練（0.2.0）+ drift report（0.2.1）+ Linear（0.2.2）+ JIRA（0.2.3）。v0.3 加 Notion / Figma / auto-link。
 
 ## 範例流程——spec → test → coverage
 
@@ -130,7 +130,7 @@ Traceability index 已記下 4 條對應。下個 sprint 規格改了時，v0.2 
 | 里程碑 | 目標 | 狀態 |
 |---|---|---|
 | v0.1（MVP — markdown_local + github_issues、7 tools） | 2026/06 | ✅ Shipped |
-| v0.2（Linear、JIRA、覆蓋矩陣、規格品質教練、drift report） | 2026/08 | 🟡 覆蓋矩陣 + 教練 + drift report + Linear 已 ship（0.2.2）；JIRA 待補 |
+| v0.2（Linear、JIRA、覆蓋矩陣、規格品質教練、drift report） | 2026/08 | ✅ 完整 ship（0.2.3） |
 | v0.3（Notion、Figma、自動 link、optimization plan） | 2026/10 | ⬜ |
 | v1.0（production-ready、完整文件、整合範例） | 2026 Q4 | ⬜ |
 

@@ -25,3 +25,4 @@ def get_source(name: str) -> SpecSource:
 from . import markdown_local  # noqa: E402, F401
 from . import github_issues  # noqa: E402, F401
 from . import linear  # noqa: E402, F401
+from . import jira  # noqa: E402, F401
