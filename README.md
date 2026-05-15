@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kao273183/mk-spec-master/main/assets/logo.svg" alt="mk-spec-master logo" width="180" />
+</p>
+
 <h1 align="center">MK Spec Master</h1>
 
 <p align="center">
@@ -5,13 +9,47 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
-  <img src="https://img.shields.io/badge/status-pre--alpha-orange.svg" alt="Status: Pre-alpha" />
+  <strong>English</strong> · <a href="README.zh-TW.md">繁體中文</a>
 </p>
+
+<p align="center">
+  <a href="https://pypi.org/project/mk-spec-master/"><img src="https://img.shields.io/pypi/v/mk-spec-master.svg?logo=pypi&logoColor=white&color=3775A9" alt="PyPI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  <img src="https://img.shields.io/badge/status-alpha-orange.svg" alt="Status: Alpha" />
+</p>
+
+> Spec-driven testing over MCP. Turn Linear / JIRA / GitHub Issues / Notion / Figma / Markdown specs into runnable scenarios, hand off to any test runner via [`mk-qa-master`](https://github.com/kao273183/mk-qa-master), and keep a live spec ↔ test coverage matrix.
 
 > **⚠️ Alpha — v0.1 MVP.** 7 tools shipped (markdown_local + github_issues sources). Full design in [`docs/prd.md`](docs/prd.md). Next: Linear / JIRA adapters + coverage matrix in v0.2.
 
 ---
+
+## Install
+
+```bash
+uvx mk-spec-master    # or: pip install mk-spec-master
+```
+
+Add to your MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "mk-spec-master": {
+      "command": "uvx",
+      "args": ["mk-spec-master"],
+      "env": {
+        "SPEC_SOURCE": "markdown_local",
+        "SPEC_PROJECT_ROOT": "/path/to/your/project"
+      }
+    }
+  }
+}
+```
+
+Then in Claude / Cursor / Codex / Gemini CLI:
+
+> "Use mk-spec-master to parse SPEC-001, extract scenarios, and hand them to mk-qa-master so we can generate Playwright tests."
 
 ## What this is
 
@@ -30,6 +68,57 @@ Sibling to `mk-qa-master` in the `mk-*` family of opinionated AI-QA MCPs.
 
 See [`docs/prd.md` §4](docs/prd.md) for the full positioning.
 
+## Tool surface (v0.1)
+
+| Tool | Purpose |
+|---|---|
+| `get_spec_source_info` | Active adapter + all available — call this first |
+| `list_specs` | Enumerate specs from the active source (filter by status / label / limit) |
+| `fetch_spec` | Pull a single spec's full content by id |
+| `parse_spec` | Heuristic AC extraction (en + zh-TW + zh-CN headings supported); accepts `spec_id` or `raw_text` |
+| `extract_scenarios` | AC → scenarios with happy / edge / error classification (negation-aware) and best-effort Given/When/Then split |
+| `generate_test_plan` | One-shot fetch + parse + extract → markdown plan ready to feed to `mk-qa-master.generate_test(business_context=...)` |
+| `link_test_to_spec` | Record that a test verifies a spec (writes to `SPEC_PROJECT_ROOT/.mk-spec-master/index.json`) |
+
+More arrive in v0.2 — `get_coverage_matrix`, `get_drift_report`, `analyze_spec_quality`, `propose_spec_improvements` (the spec-quality coach).
+
+## Adapter status
+
+| `SPEC_SOURCE` | Source | Status | Auth |
+|---|---|---|---|
+| `markdown_local` | Local `*.md` with YAML-ish frontmatter | ✅ v0.1 | none |
+| `github_issues` | GitHub Issues via `gh` CLI | ✅ v0.1 | `gh auth login` or `GITHUB_TOKEN` |
+| `linear` | Linear API | ⬜ v0.2 | `LINEAR_API_KEY` |
+| `jira` | JIRA Cloud / Server | ⬜ v0.2 | `JIRA_API_TOKEN` + `JIRA_BASE_URL` |
+| `notion` | Notion databases | ⬜ v0.3 | `NOTION_TOKEN` |
+| `figma` | Figma annotations + comments | ⬜ v0.3 | `FIGMA_TOKEN` |
+
+## Walkthrough — spec → test → coverage
+
+Given a Linear ticket *LIN-123 "Apply discount at checkout"* with 4 acceptance criteria:
+
+```
+You: Use mk-spec-master to fetch LIN-123, extract scenarios, generate
+     Playwright tests with mk-qa-master, run them, and report coverage.
+```
+
+The AI client chains:
+
+```
+mk-spec-master.fetch_spec("LIN-123")
+mk-spec-master.parse_spec(spec_id="LIN-123")        → 4 AC
+mk-spec-master.extract_scenarios(...)                → 1 happy + 3 error
+mk-spec-master.generate_test_plan(spec_id="LIN-123")
+
+for scenario in plan:
+  mk-qa-master.generate_test(business_context=scenario.gherkin)
+  mk-spec-master.link_test_to_spec(spec_id="LIN-123", test_node_id=...)
+
+mk-qa-master.run_tests
+```
+
+The traceability index now records all 4 links. Next sprint, when the spec changes, `get_drift_report` (v0.2) will flag tests that may be stale.
+
 ## Status
 
 | Milestone | Target | Status |
@@ -39,16 +128,10 @@ See [`docs/prd.md` §4](docs/prd.md) for the full positioning.
 | v0.3 (Notion, Figma, auto-link, optimization plan) | Oct 2026 | ⬜ |
 | v1.0 (production-ready, docs, integration recipes) | Q4 2026 | ⬜ |
 
-## Quick design read
+## Family
 
-- **Vision + problem**: [`docs/prd.md` §1–2](docs/prd.md)
-- **Competitive positioning**: [`docs/prd.md` §4](docs/prd.md)
-- **Tool surface**: [`docs/prd.md` §8](docs/prd.md)
-- **Walkthrough (end-to-end with mk-qa-master)**: [`docs/prd.md` §19](docs/prd.md)
-
-## Related
-
-- [mk-qa-master](https://github.com/kao273183/mk-qa-master) — the QA loop sibling. Tests run via mk-qa-master; coverage tracked here.
+- [`mk-qa-master`](https://github.com/kao273183/mk-qa-master) — AI 測試大師, the test-runner sibling. Tests run via mk-qa-master; coverage tracked here.
+- More `mk-*` MCPs in design (`mk-perf-master`, `mk-a11y-master`).
 
 ## License
 
