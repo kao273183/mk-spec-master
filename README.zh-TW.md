@@ -89,12 +89,14 @@ v0.2 還在做的：`get_drift_report` + Linear / JIRA adapter。
 
 | `SPEC_SOURCE` | 來源 | 狀態 | 認證 |
 |---|---|---|---|
-| `markdown_local` | 本地 `*.md`，frontmatter 帶 metadata | ✅ v0.1 | 不用 |
-| `github_issues` | GitHub Issues，走 `gh` CLI | ✅ v0.1 | `gh auth login` 或 `GITHUB_TOKEN` |
-| `linear` | Linear API | ⬜ v0.2 | `LINEAR_API_KEY` |
-| `jira` | JIRA Cloud / Server | ⬜ v0.2 | `JIRA_API_TOKEN` + `JIRA_BASE_URL` |
-| `notion` | Notion databases | ⬜ v0.3 | `NOTION_TOKEN` |
-| `figma` | Figma 註解 + comments | ⬜ v0.3 | `FIGMA_TOKEN` |
+| `markdown_local` | 本地 `*.md`，frontmatter 帶 metadata | ✅ 0.1.0 起 | 不用 |
+| `github_issues` | GitHub Issues，走 `gh` CLI | ✅ 0.1.0 起 | `gh auth login` 或 `GITHUB_TOKEN` |
+| `linear` | Linear API | ⏳ 待補 — v0.2.x | `LINEAR_API_KEY` |
+| `jira` | JIRA Cloud / Server | ⏳ 待補 — v0.2.x | `JIRA_API_TOKEN` + `JIRA_BASE_URL` |
+| `notion` | Notion databases | ⏳ 規劃中 — v0.3 | `NOTION_TOKEN` |
+| `figma` | Figma 註解 + comments | ⏳ 規劃中 — v0.3 | `FIGMA_TOKEN` |
+
+> v0.2.0 ship 的是覆蓋矩陣 + 規格品質教練 tools，沒有新 adapter。Linear / JIRA adapter 排在後續 0.2.x。
 
 ## 範例流程——spec → test → coverage
 
