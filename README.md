@@ -89,12 +89,14 @@ Still pending for full v0.2: `get_drift_report` + Linear / JIRA adapters.
 
 | `SPEC_SOURCE` | Source | Status | Auth |
 |---|---|---|---|
-| `markdown_local` | Local `*.md` with YAML-ish frontmatter | ✅ v0.1 | none |
-| `github_issues` | GitHub Issues via `gh` CLI | ✅ v0.1 | `gh auth login` or `GITHUB_TOKEN` |
-| `linear` | Linear API | ⬜ v0.2 | `LINEAR_API_KEY` |
-| `jira` | JIRA Cloud / Server | ⬜ v0.2 | `JIRA_API_TOKEN` + `JIRA_BASE_URL` |
-| `notion` | Notion databases | ⬜ v0.3 | `NOTION_TOKEN` |
-| `figma` | Figma annotations + comments | ⬜ v0.3 | `FIGMA_TOKEN` |
+| `markdown_local` | Local `*.md` with YAML-ish frontmatter | ✅ since 0.1.0 | none |
+| `github_issues` | GitHub Issues via `gh` CLI | ✅ since 0.1.0 | `gh auth login` or `GITHUB_TOKEN` |
+| `linear` | Linear API | ⏳ pending — v0.2.x | `LINEAR_API_KEY` |
+| `jira` | JIRA Cloud / Server | ⏳ pending — v0.2.x | `JIRA_API_TOKEN` + `JIRA_BASE_URL` |
+| `notion` | Notion databases | ⏳ planned — v0.3 | `NOTION_TOKEN` |
+| `figma` | Figma annotations + comments | ⏳ planned — v0.3 | `FIGMA_TOKEN` |
+
+> v0.2.0 shipped the coverage matrix + spec-quality coach tools, not new adapters. Linear / JIRA adapters land in a follow-up 0.2.x release.
 
 ## Walkthrough — spec → test → coverage
 
