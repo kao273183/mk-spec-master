@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="mk-spec-master logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#161B22"/>
+      <stop offset="100%" stop-color="#0D1117"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="22" fill="url(#bg)"/>
+  <rect x="14" y="14" width="152" height="152" rx="16" fill="none" stroke="#7C7FF5" stroke-width="1.5" opacity="0.45"/>
+  <text x="90" y="78" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="38" fill="#E6EDF3" font-weight="700" letter-spacing="2">MK</text>
+  <text x="90" y="115" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="22" fill="#7C7FF5" font-weight="600" letter-spacing="3">SPEC</text>
+  <line x1="56" y1="132" x2="124" y2="132" stroke="#30363D" stroke-width="1"/>
+  <text x="90" y="153" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'PingFang TC', 'Microsoft JhengHei', sans-serif" font-size="13" fill="#8B949E" letter-spacing="2">規格大師</text>
+</svg>
