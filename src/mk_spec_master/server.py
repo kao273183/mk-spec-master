@@ -1,4 +1,4 @@
-"""MCP entrypoint. Registers + dispatches the v0.1 tool surface.
+"""MCP entrypoint. Registers + dispatches the v0.2 tool surface.
 
 Tool descriptions are written to read like operating manuals — they tell
 the AI client when to call this vs another tool, what shape comes back,
@@ -19,6 +19,7 @@ from .config import SOURCE_NAME
 from .tools import specs as specs_tools
 from .tools import scenarios as scenarios_tools
 from .tools import coverage as coverage_tools
+from .tools import quality as quality_tools
 
 app = Server("mk-spec-master")
 
@@ -39,6 +40,9 @@ _DISPATCH: dict[str, Callable[[dict], dict]] = {
     "extract_scenarios": scenarios_tools.extract_scenarios_tool,
     "generate_test_plan": scenarios_tools.generate_test_plan_tool,
     "link_test_to_spec": coverage_tools.link_test_to_spec_tool,
+    "get_coverage_matrix": coverage_tools.get_coverage_matrix_tool,
+    "analyze_spec_quality": quality_tools.analyze_spec_quality_tool,
+    "propose_spec_improvements": quality_tools.propose_spec_improvements_tool,
 }
 
 
@@ -171,7 +175,10 @@ async def list_tools() -> list[Tool]:
                 "stays with the user). Re-linking the same node_id updates the "
                 "timestamp instead of duplicating. Call this right after "
                 "mk-qa-master.generate_test returns a node_id so the coverage "
-                "matrix stays current. "
+                "matrix stays current. Pass `spec_title` / `spec_source` / "
+                "`spec_url` (typically already known from earlier fetch_spec) "
+                "to cache them into the index so get_coverage_matrix can "
+                "render titles without re-fetching from the source. "
                 "Returns {action: 'added'|'updated', spec_id, test_node_id, "
                 "total_links_for_spec}."
             ),
@@ -183,8 +190,80 @@ async def list_tools() -> list[Tool]:
                         "type": "string",
                         "description": "Test framework node id, e.g. tests/test_checkout.py::test_apply_discount",
                     },
+                    "spec_title": {"type": "string"},
+                    "spec_source": {"type": "string"},
+                    "spec_url": {"type": "string"},
                 },
                 "required": ["spec_id", "test_node_id"],
+            },
+        ),
+        Tool(
+            name="get_coverage_matrix",
+            description=(
+                "Snapshot of every spec ↔ test link recorded in the local "
+                "index. Returns both structured rows and a ready-to-paste "
+                "markdown table — call this when a user asks 'what's tested' "
+                "or 'which specs have no tests'. "
+                "Filters: `min_tests` (default 0; set to 0 to find untested "
+                "specs, set to 1 to hide them) and `include_orphans` (default "
+                "true). "
+                "Returns {specs_total, specs_shown, specs_untested, "
+                "orphan_count, rows[], markdown}."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "min_tests": {"type": "integer", "default": 0},
+                    "include_orphans": {"type": "boolean", "default": True},
+                },
+            },
+        ),
+        Tool(
+            name="analyze_spec_quality",
+            description=(
+                "Run heuristic checks against a spec's body: vague language "
+                "without measurable thresholds (fast / easy / intuitive / "
+                "現代 / 順暢 ...), implementation-detail leakage in AC ('uses "
+                "Redis', '透過 X 服務'), and references to roles ('logged-in "
+                "user', '管理員') without a Preconditions section. Pass "
+                "`spec_id` for one spec, `raw_text` to analyze a freeform "
+                "draft, or neither to sweep every spec from the active "
+                "source. "
+                "Returns {source, specs_analyzed, total_findings, results[]}. "
+                "Each result has {spec_id, title, ac_count, score (0–100), "
+                "findings[]} where each finding carries severity (info / "
+                "warn / error), evidence, and a suggested rewrite. Pair with "
+                "propose_spec_improvements for the markdown coach plan."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "spec_id": {"type": "string"},
+                    "raw_text": {"type": "string"},
+                },
+            },
+        ),
+        Tool(
+            name="propose_spec_improvements",
+            description=(
+                "Take analyze_spec_quality output and produce a PM-facing "
+                "markdown coach plan grouping findings by spec and issue type, "
+                "with concrete rewrite suggestions per finding. If `analysis` "
+                "is not provided, runs analyze_spec_quality inline with the "
+                "remaining arguments. Use this when a user says 'how do I "
+                "improve this spec' or 'review my PRD'. "
+                "Returns {markdown, actions[]}."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "analysis": {
+                        "type": "object",
+                        "description": "Output of analyze_spec_quality. If omitted, this tool runs the analysis itself.",
+                    },
+                    "spec_id": {"type": "string"},
+                    "raw_text": {"type": "string"},
+                },
             },
         ),
     ]

@@ -8,16 +8,22 @@ import json
 
 from .. import config
 
-EMPTY_INDEX: dict = {
-    "version": 1,
-    "specs": {},
-    "orphans": [],
-}
+
+def _empty_index() -> dict:
+    """Fresh empty index each call. Was previously a module-level dict,
+    but shallow-copying it leaked the nested `specs` reference across
+    callers — one test's writes appearing in the next test's "fresh" load."""
+    return {"version": 1, "specs": {}, "orphans": []}
+
+
+# Kept for backwards compatibility with any external import of the constant.
+# Treat as read-only; do not mutate. Use _empty_index() internally.
+EMPTY_INDEX: dict = _empty_index()
 
 
 def load_index() -> dict:
     if not config.INDEX_PATH.exists():
-        return dict(EMPTY_INDEX)
+        return _empty_index()
     return json.loads(config.INDEX_PATH.read_text(encoding="utf-8"))
 
 

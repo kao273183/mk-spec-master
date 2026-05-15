@@ -20,7 +20,7 @@
 
 > Spec-driven testing over MCP. Turn Linear / JIRA / GitHub Issues / Notion / Figma / Markdown specs into runnable scenarios, hand off to any test runner via [`mk-qa-master`](https://github.com/kao273183/mk-qa-master), and keep a live spec ↔ test coverage matrix.
 
-> **⚠️ Alpha — v0.1 MVP.** 7 tools shipped (markdown_local + github_issues sources). Full design in [`docs/prd.md`](docs/prd.md). Next: Linear / JIRA adapters + coverage matrix in v0.2.
+> **🟢 Alpha — v0.2 partial.** 10 tools shipped (coverage matrix + spec-quality coach added). Full design in [`docs/prd.md`](docs/prd.md). Next in v0.2: Linear / JIRA adapters + drift report.
 
 ---
 
@@ -68,19 +68,22 @@ Sibling to `mk-qa-master` in the `mk-*` family of opinionated AI-QA MCPs.
 
 See [`docs/prd.md` §4](docs/prd.md) for the full positioning.
 
-## Tool surface (v0.1)
+## Tool surface (v0.2 partial — 10 tools)
 
-| Tool | Purpose |
-|---|---|
-| `get_spec_source_info` | Active adapter + all available — call this first |
-| `list_specs` | Enumerate specs from the active source (filter by status / label / limit) |
-| `fetch_spec` | Pull a single spec's full content by id |
-| `parse_spec` | Heuristic AC extraction (en + zh-TW + zh-CN headings supported); accepts `spec_id` or `raw_text` |
-| `extract_scenarios` | AC → scenarios with happy / edge / error classification (negation-aware) and best-effort Given/When/Then split |
-| `generate_test_plan` | One-shot fetch + parse + extract → markdown plan ready to feed to `mk-qa-master.generate_test(business_context=...)` |
-| `link_test_to_spec` | Record that a test verifies a spec (writes to `SPEC_PROJECT_ROOT/.mk-spec-master/index.json`) |
+| Tool | Since | Purpose |
+|---|---|---|
+| `get_spec_source_info` | v0.1 | Active adapter + all available — call this first |
+| `list_specs` | v0.1 | Enumerate specs from the active source (filter by status / label / limit) |
+| `fetch_spec` | v0.1 | Pull a single spec's full content by id |
+| `parse_spec` | v0.1 | Heuristic AC extraction (en + zh-TW + zh-CN headings supported); accepts `spec_id` or `raw_text` |
+| `extract_scenarios` | v0.1 | AC → scenarios with happy / edge / error classification (negation-aware) and best-effort Given/When/Then split |
+| `generate_test_plan` | v0.1 | One-shot fetch + parse + extract → markdown plan ready to feed to `mk-qa-master.generate_test(business_context=...)` |
+| `link_test_to_spec` | v0.1 | Record that a test verifies a spec (writes to `SPEC_PROJECT_ROOT/.mk-spec-master/index.json`). v0.2: caches title / source / url for the matrix |
+| `get_coverage_matrix` | **v0.2** | Spec × test grid — answer "which specs have no tests" in one call |
+| `analyze_spec_quality` | **v0.2** | Heuristic coach — flags vague language, implementation-leak AC, unclear role refs (the differentiator vs Kiro / Spec Kit) |
+| `propose_spec_improvements` | **v0.2** | Take analyze output → PM-facing markdown with concrete rewrites |
 
-More arrive in v0.2 — `get_coverage_matrix`, `get_drift_report`, `analyze_spec_quality`, `propose_spec_improvements` (the spec-quality coach).
+Still pending for full v0.2: `get_drift_report` + Linear / JIRA adapters.
 
 ## Adapter status
 
@@ -124,7 +127,7 @@ The traceability index now records all 4 links. Next sprint, when the spec chang
 | Milestone | Target | Status |
 |---|---|---|
 | v0.1 (MVP — markdown_local + github_issues, 7 tools) | June 2026 | ✅ Shipped |
-| v0.2 (Linear, JIRA, coverage matrix, spec-quality coach) | Aug 2026 | ⬜ |
+| v0.2 (Linear, JIRA, coverage matrix, spec-quality coach) | Aug 2026 | 🟡 Coverage matrix + coach shipped (0.2.0); Linear / JIRA + drift report pending |
 | v0.3 (Notion, Figma, auto-link, optimization plan) | Oct 2026 | ⬜ |
 | v1.0 (production-ready, docs, integration recipes) | Q4 2026 | ⬜ |
 
