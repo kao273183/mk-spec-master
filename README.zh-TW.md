@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kao273183/mk-spec-master/main/assets/logo.svg" alt="AI 規格大師 logo" width="180" />
+  <img src="https://raw.githubusercontent.com/kao273183/mk-spec-master/main/assets/logo.png" alt="AI 規格大師 logo" width="180" />
 </p>
 
 <h1 align="center">AI 規格大師 ｜ MK Spec Master</h1>
