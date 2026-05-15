@@ -141,4 +141,9 @@ The traceability index now records all 4 links. Next sprint, when the spec chang
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT © 2026 Jack Kao — see [`LICENSE`](LICENSE)
+(中文翻譯參考：[`LICENSE.zh-TW.md`](LICENSE.zh-TW.md); the English version is authoritative).
+
+**Plain-English version:** personal use, commercial use, modification, redistribution — all allowed. The only requirement is that you keep the copyright and license notice in your copy. **No warranty**: if it breaks something in production, you can't come after the author.
+
+If this saved you time, [a coffee](https://www.buymeacoffee.com/minikao) goes a long way. ☕
