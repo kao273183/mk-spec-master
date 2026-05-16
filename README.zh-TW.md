@@ -20,7 +20,7 @@
 
 > 一個 spec-driven testing 的 MCP server。把 Linear / JIRA / GitHub Issues / Notion / Figma / Markdown 上的規格轉成可執行的測試場景、交給 [`mk-qa-master`](https://github.com/kao273183/mk-qa-master) 或任何測試 runner，並維持一份即時的 spec ↔ test 覆蓋矩陣。
 
-> **🟢 Alpha — v0.3 partial。** **12 個 tool** + 6 個 adapter。完整設計見 [`docs/prd.md`](docs/prd.md)。v0.3 還缺：optimization plan + 領域知識層。
+> **🟢 Alpha — v0.3 完成。** **15 個 tool** + 6 個 adapter。完整設計見 [`docs/prd.md`](docs/prd.md)。下一站：v1.0（文件硬化、整合範例、production-ready）。
 
 ---
 
@@ -84,8 +84,10 @@ MCP client config 加上：
 | `propose_spec_improvements` | **v0.2** | 把 analyze 輸出整理成 PM 可直接照做的 markdown 改寫建議 |
 | `get_drift_report` | **v0.2.1** | 對每個有存 ac_hash 的 spec 重新 fetch 比對，分 fresh / drifted / unknown / stranded 四格 |
 | `auto_link_tests` | **v0.3.2** | 掃 test 資料夾抓 `@spec: <ID>` tag（在 docstring / 註解皆可），自動 link。支援 Python / JS / TS / Go。`dry_run` 預覽不寫 index |
+| `get_optimization_plan` | **v0.3.3** | 三層整合 coach markdown：Layer 1 覆蓋缺口、Layer 2 規格品質、Layer 3 流程飄移。整合上面其他工具——使用者問「下一步該修什麼」時叫這個 |
+| `init_spec_knowledge` / `get_spec_context` | **v0.3.3** | 方法論層：`SPEC_PROJECT_ROOT/spec-knowledge.md`，含 EARS / INVEST / AC 品質規則，加上你的 domain rules / actors / glossary TODO 區段。session 開頭叫 `get_spec_context` 把方法論帶進每一次解讀 |
 
-v0.3 還缺：optimization plan + 領域知識層。
+v0.3 milestone 全部 ship — `docs/prd.md` §8 所有 tool + adapter 都到齊了。
 
 ## Adapter 狀態
 
@@ -98,7 +100,7 @@ v0.3 還缺：optimization plan + 領域知識層。
 | `notion` | Notion databases（REST v1、blocks → markdown） | ✅ 0.3.0 起 | `NOTION_TOKEN` + `SPEC_PROJECT_KEY=<database-id>` |
 | `figma` | Figma frames（TEXT 節點 + comments → markdown） | ✅ 0.3.1 起 | `FIGMA_TOKEN` + `SPEC_PROJECT_KEY=<file-key>` |
 
-> v0.2 在 0.2.3 完成。v0.3.0 加 Notion；v0.3.1 加 Figma；v0.3.2 加 `auto_link_tests`。optimization plan + 領域知識層還沒做。
+> v0.2 在 0.2.3 完成；v0.3 在 0.3.3 完成（Notion → Figma → auto_link_tests → optimization plan + 領域知識層）。v1.0 主軸是文件硬化 + 整合範例。
 
 ## 範例流程——spec → test → coverage
 
