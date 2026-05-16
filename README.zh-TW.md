@@ -207,6 +207,12 @@ MCP client config 加上：
 }
 ```
 
+Claude Desktop config 路徑：
+
+- **macOS**：`~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**：`%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**：`~/.config/Claude/claude_desktop_config.json`
+
 接著在 Claude / Cursor / Codex / Gemini CLI 直接說：
 
 > 「用 mk-spec-master 讀 SPEC-001、抽場景、丟給 mk-qa-master 產 Playwright 測試。」

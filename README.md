@@ -215,6 +215,12 @@ Add to your MCP client config:
 }
 ```
 
+Claude Desktop config lives at:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
 Then in Claude / Cursor / Codex / Gemini CLI:
 
 > "Use mk-spec-master to parse SPEC-001, extract scenarios, and hand them to mk-qa-master so we can generate Playwright tests."
