@@ -20,7 +20,7 @@
 
 > Spec-driven testing over MCP. Turn Linear / JIRA / GitHub Issues / Notion / Figma / Markdown specs into runnable scenarios, hand off to any test runner via [`mk-qa-master`](https://github.com/kao273183/mk-qa-master), and keep a live spec ↔ test coverage matrix.
 
-> **🟢 Alpha — v0.3 complete.** **15 tools** + 6 adapters. Full design in [`docs/prd.md`](docs/prd.md). Next stop: v1.0 (docs hardening, integration recipes, production-ready).
+> **🟢 Alpha — v0.4: self-reinforcement.** **18 tools** + 6 adapters. Snapshots archived per `get_optimization_plan` call → trend analysis + chronic-spec detection + tool-usage telemetry. Full design in [`docs/prd.md`](docs/prd.md).
 
 ---
 
@@ -92,6 +92,14 @@ Grouped by role. Each group is a layer in the spec→test→coverage→coach loo
 |---|---|
 | `init_spec_knowledge` | Create `SPEC_PROJECT_ROOT/spec-knowledge.md` from a starter template (EARS, INVEST, AC quality rules + TODO sections for your team's rules / actors / glossary). Idempotent |
 | `get_spec_context` | Read the spec-knowledge file (with built-in fallback). Optional `section` filter pulls one heading at a time. Call near the start of every session |
+
+### Self-reinforcement — long-running view (3, v0.4)
+
+| Tool | Purpose |
+|---|---|
+| `get_spec_history` | Last N snapshots archived by `get_optimization_plan`, with trend deltas (current vs ~7d, vs ~30d) for spec / coverage / quality / drift counters. "Are we improving?" |
+| `get_drift_signature` | Scan recent snapshots for specs that repeatedly land in drifted / unknown / low-quality buckets — chronic patterns. "Which specs keep causing trouble?" |
+| `get_telemetry` | Aggregate the tool-usage log: which tools get called most, error rates, p50 / p95 latency, dead-surface (declared but never called) |
 
 ---
 

@@ -14,6 +14,7 @@ Layer 3 — Process drift     (data from get_drift_report)
 from typing import Any
 
 from . import coverage as coverage_tools
+from . import history as history_tools
 from . import quality as quality_tools
 
 
@@ -153,7 +154,7 @@ def get_optimization_plan_tool(arguments: dict) -> dict[str, Any]:
                 md.append("")
 
     # Counters for the top-level structured response.
-    return {
+    payload = {
         "specs_total": coverage_data.get("specs_total", 0),
         "untested_count": len(untested),
         "low_coverage_count": len(low_coverage),
@@ -168,3 +169,10 @@ def get_optimization_plan_tool(arguments: dict) -> dict[str, Any]:
         "stranded": stranded,
         "markdown": "\n".join(md),
     }
+
+    # v0.4: archive a snapshot so get_spec_history / get_drift_signature
+    # can compute trends. Failures here don't break the live response.
+    if not arguments.get("skip_archive"):
+        history_tools.archive_snapshot(payload)
+
+    return payload
