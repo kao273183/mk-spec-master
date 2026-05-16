@@ -20,7 +20,7 @@
 
 > 一個 spec-driven testing 的 MCP server。把 Linear / JIRA / GitHub Issues / Notion / Figma / Markdown 上的規格轉成可執行的測試場景、交給 [`mk-qa-master`](https://github.com/kao273183/mk-qa-master) 或任何測試 runner，並維持一份即時的 spec ↔ test 覆蓋矩陣。
 
-> **🟢 Alpha — v0.3 partial。** 11 個 tool + 5 個 adapter（markdown_local、github_issues、linear、jira、notion）。完整設計見 [`docs/prd.md`](docs/prd.md)。v0.3 還缺：Figma、auto-link via docstring、optimization plan。
+> **🟢 Alpha — v0.3 partial。** 11 個 tool + **6 個 adapter**（markdown_local、github_issues、linear、jira、notion、figma）。完整設計見 [`docs/prd.md`](docs/prd.md)。v0.3 還缺：auto-link via docstring、optimization plan。
 
 ---
 
@@ -95,9 +95,9 @@ v0.2 還在做的：Linear / JIRA adapter。
 | `linear` | Linear API（GraphQL） | ✅ 0.2.2 起 | `LINEAR_API_KEY` + `SPEC_PROJECT_KEY=<團隊代碼>`（選填） |
 | `jira` | JIRA Cloud（REST v3、ADF → markdown） | ✅ 0.2.3 起 | `JIRA_BASE_URL` + `JIRA_EMAIL` + `JIRA_API_TOKEN` + `SPEC_PROJECT_KEY=<專案 key>`（選填） |
 | `notion` | Notion databases（REST v1、blocks → markdown） | ✅ 0.3.0 起 | `NOTION_TOKEN` + `SPEC_PROJECT_KEY=<database-id>` |
-| `figma` | Figma 註解 + comments | ⏳ 規劃中 — v0.3 | `FIGMA_TOKEN` |
+| `figma` | Figma frames（TEXT 節點 + comments → markdown） | ✅ 0.3.1 起 | `FIGMA_TOKEN` + `SPEC_PROJECT_KEY=<file-key>` |
 
-> v0.2 在 0.2.3 完成：覆蓋矩陣 + 教練 + drift report + Linear + JIRA。v0.3 從 Notion adapter（0.3.0）開始；Figma + auto-link + optimization plan 接著補。
+> v0.2 在 0.2.3 完成。v0.3.0 加 Notion；v0.3.1 加 Figma。auto-link + optimization plan 還沒做。
 
 ## 範例流程——spec → test → coverage
 
