@@ -24,6 +24,166 @@
 
 ---
 
+## What this is
+
+An MCP server that turns specs — Linear tickets, JIRA stories, GitHub Issues, Notion pages, Figma annotations, plain Markdown — into structured test scenarios, hands them to any test runner (via [`mk-qa-master`](https://github.com/kao273183/mk-qa-master) or directly), and maintains a live spec ↔ test coverage matrix.
+
+Sibling to `mk-qa-master` in the `mk-*` family of opinionated AI-QA MCPs.
+
+## What this is NOT
+
+| It's not | Use this instead |
+|---|---|
+| A spec **editor** | Linear / JIRA / Notion / Markdown — keep writing specs where you already do |
+| A **test runner** | [`mk-qa-master`](https://github.com/kao273183/mk-qa-master) (pytest / Jest / Cypress / Go test / Maestro) |
+| An **issue tracker UI** | Linear / JIRA / Notion's native interface |
+| A **spec → code** generator | GitHub Spec Kit, AWS Kiro |
+| An **LLM** | Leverages your AI client (Claude / Cursor / Codex / Gemini) for the reasoning |
+
+mk-spec-master sits **between** your spec source and your test runner — purely about the *spec ↔ test* link, the coverage matrix that lives on top, and the quality coach that grades both.
+
+---
+
+## Tool surface (15 tools)
+
+Grouped by role. Each group is a layer in the spec→test→coverage→coach loop.
+
+### Meta — orientation (1)
+
+| Tool | Purpose |
+|---|---|
+| `get_spec_source_info` | Active adapter + all available. Call first so the AI knows whether to expect Linear / JIRA / Notion / Figma / Markdown semantics |
+
+### Discovery — find and load specs (3)
+
+| Tool | Purpose |
+|---|---|
+| `list_specs` | Enumerate specs from the active source (filter by status / label / limit) |
+| `fetch_spec` | Pull a single spec's full content by id |
+| `parse_spec` | Heuristic AC extraction (en + zh-TW + zh-CN headings supported); accepts `spec_id` or `raw_text`. Returns `_meta.ac_hash` for drift detection |
+
+### Generation — specs → testable artifacts (2)
+
+| Tool | Purpose |
+|---|---|
+| `extract_scenarios` | AC → scenarios with happy / edge / error classification (negation-aware) and best-effort Given/When/Then split |
+| `generate_test_plan` | One-shot fetch + parse + extract → markdown plan ready to feed to `mk-qa-master.generate_test(business_context=...)` |
+
+### Coverage & drift — the traceability layer (4)
+
+| Tool | Purpose |
+|---|---|
+| `link_test_to_spec` | Record that a test verifies a spec (writes to `SPEC_PROJECT_ROOT/.mk-spec-master/index.json`). Stores title / source / url / ac_hash for the matrix and drift report |
+| `auto_link_tests` | Scan a test directory for `@spec: <ID>` tags and link them automatically. Python / JS / TS / Go supported. `dry_run` previews without writing |
+| `get_coverage_matrix` | Spec × test grid — answer "which specs have no tests" in one call |
+| `get_drift_report` | Re-fetch each linked spec, recompute ac_hash, compare. Buckets into fresh / drifted / unknown / stranded |
+
+### Coach — quality + prioritization (3)
+
+| Tool | Purpose |
+|---|---|
+| `analyze_spec_quality` | Heuristic findings on vague language, implementation-leak AC, unclear role refs (the differentiator vs Kiro / Spec Kit) |
+| `propose_spec_improvements` | Take analyze output → PM-facing markdown with concrete rewrites |
+| `get_optimization_plan` | Three-layer prioritized plan: coverage gaps (L1) + spec-quality (L2) + process drift (L3). The "what should we fix next" tool |
+
+### Knowledge — domain methodology (2)
+
+| Tool | Purpose |
+|---|---|
+| `init_spec_knowledge` | Create `SPEC_PROJECT_ROOT/spec-knowledge.md` from a starter template (EARS, INVEST, AC quality rules + TODO sections for your team's rules / actors / glossary). Idempotent |
+| `get_spec_context` | Read the spec-knowledge file (with built-in fallback). Optional `section` filter pulls one heading at a time. Call near the start of every session |
+
+---
+
+## Adapter status
+
+| `SPEC_SOURCE` | Source | Status | Auth |
+|---|---|---|---|
+| `markdown_local` | Local `*.md` with YAML-ish frontmatter | ✅ since 0.1.0 | none |
+| `github_issues` | GitHub Issues via `gh` CLI | ✅ since 0.1.0 | `gh auth login` or `GITHUB_TOKEN` |
+| `linear` | Linear API (GraphQL) | ✅ since 0.2.2 | `LINEAR_API_KEY` + `SPEC_PROJECT_KEY=<team-key>` (optional) |
+| `jira` | JIRA Cloud (REST v3, ADF → markdown) | ✅ since 0.2.3 | `JIRA_BASE_URL` + `JIRA_EMAIL` + `JIRA_API_TOKEN` + `SPEC_PROJECT_KEY=<project-key>` (optional) |
+| `notion` | Notion databases (REST v1, blocks → markdown) | ✅ since 0.3.0 | `NOTION_TOKEN` + `SPEC_PROJECT_KEY=<database-id>` |
+| `figma` | Figma file frames (TEXT nodes + comments → markdown) | ✅ since 0.3.1 | `FIGMA_TOKEN` + `SPEC_PROJECT_KEY=<file-key>` |
+
+---
+
+## Common workflows
+
+Four patterns cover ~90% of real use. Each is one sentence to the AI client; the tools chain automatically.
+
+### 1. Spec → test → run → coverage (the main loop)
+
+> "Fetch LIN-123 from Linear, extract scenarios, generate Playwright tests with mk-qa-master, run them, and update the coverage matrix."
+
+Chains: `fetch_spec` → `parse_spec` → `extract_scenarios` → `mk-qa-master.generate_test` (×N) → `link_test_to_spec` (×N) → `mk-qa-master.run_tests` → `get_coverage_matrix`.
+
+### 2. Spec health check
+
+> "Review every in-progress spec for quality issues and give me a prioritized improvement plan."
+
+Chains: `list_specs(status="in-progress")` → `analyze_spec_quality` → `propose_spec_improvements` → `get_optimization_plan`.
+
+### 3. Rebuild traceability after a refactor
+
+> "Sync the spec ↔ test index from the test source — I just renamed a bunch of files."
+
+Chains: `auto_link_tests` → `get_coverage_matrix`. Tests need `@spec: <ID>` docstring tags for auto-link to work; comment-above-function and docstring-inside both supported.
+
+### 4. Session warmup
+
+> "Before we work on specs today: load the spec-knowledge methodology and tell me which source is active."
+
+Chains: `get_spec_source_info` → `get_spec_context`. Cheap, sets the methodology + adapter context for everything that follows.
+
+---
+
+## Sample output
+
+### `get_optimization_plan` markdown (excerpt)
+
+```markdown
+# Optimization plan
+
+_Coverage matrix: 23 spec(s) tracked, 4 untested._
+_Spec quality: 23 spec(s) analyzed, 17 finding(s)._
+_Drift: 2 drifted, 0 stranded, 5 without ac_hash._
+
+## 🔴 Layer 1 — Coverage gaps
+
+**Specs with zero tests** (ranked first — every business risk lives here):
+- `LIN-204` — Apply promo code at checkout
+- `LIN-211` — Refund flow
+
+## 🟡 Layer 2 — Spec quality
+
+### `LIN-098` — Checkout latency  (score: 80/100, findings: 4)
+- 🟡 `ac-1`: Quantify (e.g., 'response within 200 ms')  (evidence: `fast`)
+- 🔴 `ac-3`: Rewrite to describe what the user observes  (evidence: `redis`)
+
+## 🔵 Layer 3 — Process drift
+
+**Drifted** (spec changed since link — review affected tests):
+- `LIN-123` — Apply discount at checkout · 4 test(s) potentially stale
+```
+
+### `get_coverage_matrix` markdown (excerpt)
+
+```markdown
+# Coverage matrix
+
+- Specs tracked: 23
+- Specs shown (min_tests=0): 23
+- Specs with zero tests: 4
+
+| Spec    | Title                          | Tests | Last status |
+|---------|--------------------------------|------:|-------------|
+| `LIN-204` | Apply promo code at checkout |     0 | —           |
+| `LIN-123` | Apply discount at checkout   |     4 | passed      |
+```
+
+---
+
 ## Install
 
 ```bash
@@ -51,11 +211,7 @@ Then in Claude / Cursor / Codex / Gemini CLI:
 
 > "Use mk-spec-master to parse SPEC-001, extract scenarios, and hand them to mk-qa-master so we can generate Playwright tests."
 
-## What this is
-
-An MCP server that turns specs — Linear tickets, JIRA stories, GitHub Issues, Notion pages, Figma annotations, plain Markdown — into structured test scenarios, hands them to any test runner (via [`mk-qa-master`](https://github.com/kao273183/mk-qa-master) or directly), and maintains a live spec ↔ test coverage matrix.
-
-Sibling to `mk-qa-master` in the `mk-*` family of opinionated AI-QA MCPs.
+---
 
 ## Why this is missing from the ecosystem
 
@@ -68,41 +224,7 @@ Sibling to `mk-qa-master` in the `mk-*` family of opinionated AI-QA MCPs.
 
 See [`docs/prd.md` §4](docs/prd.md) for the full positioning.
 
-## Tool surface (v0.2 partial — 10 tools)
-
-| Tool | Since | Purpose |
-|---|---|---|
-| `get_spec_source_info` | v0.1 | Active adapter + all available — call this first |
-| `list_specs` | v0.1 | Enumerate specs from the active source (filter by status / label / limit) |
-| `fetch_spec` | v0.1 | Pull a single spec's full content by id |
-| `parse_spec` | v0.1 | Heuristic AC extraction (en + zh-TW + zh-CN headings supported); accepts `spec_id` or `raw_text` |
-| `extract_scenarios` | v0.1 | AC → scenarios with happy / edge / error classification (negation-aware) and best-effort Given/When/Then split |
-| `generate_test_plan` | v0.1 | One-shot fetch + parse + extract → markdown plan ready to feed to `mk-qa-master.generate_test(business_context=...)` |
-| `link_test_to_spec` | v0.1 | Record that a test verifies a spec (writes to `SPEC_PROJECT_ROOT/.mk-spec-master/index.json`). v0.2: caches title / source / url for the matrix |
-| `get_coverage_matrix` | **v0.2** | Spec × test grid — answer "which specs have no tests" in one call |
-| `analyze_spec_quality` | **v0.2** | Heuristic coach — flags vague language, implementation-leak AC, unclear role refs (the differentiator vs Kiro / Spec Kit) |
-| `propose_spec_improvements` | **v0.2** | Take analyze output → PM-facing markdown with concrete rewrites |
-| `get_drift_report` | **v0.2.1** | For every spec with a stored ac_hash, fetch live + recompute + compare. Buckets results into fresh / drifted / unknown / stranded |
-| `auto_link_tests` | **v0.3.2** | Scan a test directory for `@spec: <ID>` tags in docstrings or comments and link them automatically. Python / JS / TS / Go supported. `dry_run` previews without writing |
-| `get_optimization_plan` | **v0.3.3** | Three-layer prioritized markdown coach plan: coverage gaps (Layer 1), spec-quality findings (Layer 2), process drift (Layer 3). Integrates the other tools — call this when the user asks "what should we fix next" |
-| `init_spec_knowledge` / `get_spec_context` | **v0.3.3** | Methodology + domain glossary at `SPEC_PROJECT_ROOT/spec-knowledge.md` (EARS, INVEST, AC quality rules; plus TODO sections for the team's rules / actors / glossary). Call `get_spec_context` near the start of a session |
-
-v0.3 milestone complete — every adapter and every tool from [`docs/prd.md` §8](docs/prd.md) is now shipped.
-
-## Adapter status
-
-| `SPEC_SOURCE` | Source | Status | Auth |
-|---|---|---|---|
-| `markdown_local` | Local `*.md` with YAML-ish frontmatter | ✅ since 0.1.0 | none |
-| `github_issues` | GitHub Issues via `gh` CLI | ✅ since 0.1.0 | `gh auth login` or `GITHUB_TOKEN` |
-| `linear` | Linear API (GraphQL) | ✅ since 0.2.2 | `LINEAR_API_KEY` + `SPEC_PROJECT_KEY=<team-key>` (optional) |
-| `jira` | JIRA Cloud (REST v3, ADF → markdown) | ✅ since 0.2.3 | `JIRA_BASE_URL` + `JIRA_EMAIL` + `JIRA_API_TOKEN` + `SPEC_PROJECT_KEY=<project-key>` (optional) |
-| `notion` | Notion databases (REST v1, blocks → markdown) | ✅ since 0.3.0 | `NOTION_TOKEN` + `SPEC_PROJECT_KEY=<database-id>` |
-| `figma` | Figma file frames (TEXT nodes + comments → markdown) | ✅ since 0.3.1 | `FIGMA_TOKEN` + `SPEC_PROJECT_KEY=<file-key>` |
-
-> v0.2 complete in 0.2.3; v0.3 complete in 0.3.3 (Notion → Figma → auto_link_tests → optimization plan + spec-knowledge layer). v1.0 will focus on docs hardening + integration recipes.
-
-## Walkthrough — spec → test → coverage
+## Walkthrough — spec → test → coverage (long form)
 
 Given a Linear ticket *LIN-123 "Apply discount at checkout"* with 4 acceptance criteria:
 
@@ -115,18 +237,21 @@ The AI client chains:
 
 ```
 mk-spec-master.fetch_spec("LIN-123")
-mk-spec-master.parse_spec(spec_id="LIN-123")        → 4 AC
+mk-spec-master.parse_spec(spec_id="LIN-123")        → 4 AC + ac_hash
 mk-spec-master.extract_scenarios(...)                → 1 happy + 3 error
 mk-spec-master.generate_test_plan(spec_id="LIN-123")
 
 for scenario in plan:
   mk-qa-master.generate_test(business_context=scenario.gherkin)
-  mk-spec-master.link_test_to_spec(spec_id="LIN-123", test_node_id=...)
+  mk-spec-master.link_test_to_spec(spec_id="LIN-123", test_node_id=..., ac_hash=...)
 
 mk-qa-master.run_tests
+mk-spec-master.get_coverage_matrix
 ```
 
-The traceability index now records all 4 links. Next sprint, when the spec changes, `get_drift_report` (v0.2) will flag tests that may be stale.
+The traceability index now records all 4 links with their AC hashes. Next sprint, when the spec changes, `get_drift_report` flags every test whose linked spec has moved — re-run the chain only for those.
+
+---
 
 ## Status
 
