@@ -20,7 +20,7 @@
 
 > Spec-driven testing over MCP. Turn Linear / JIRA / GitHub Issues / Notion / Figma / Markdown specs into runnable scenarios, hand off to any test runner via [`mk-qa-master`](https://github.com/kao273183/mk-qa-master), and keep a live spec ↔ test coverage matrix.
 
-> **🟢 Alpha — v0.3 partial.** 11 tools + **6 adapters** (markdown_local, github_issues, linear, jira, notion, figma). Full design in [`docs/prd.md`](docs/prd.md). Still pending for v0.3: auto-link via test docstrings, optimization plan.
+> **🟢 Alpha — v0.3 partial.** **12 tools** + 6 adapters. Full design in [`docs/prd.md`](docs/prd.md). Still pending for v0.3: optimization plan + spec-knowledge layer.
 
 ---
 
@@ -83,8 +83,9 @@ See [`docs/prd.md` §4](docs/prd.md) for the full positioning.
 | `analyze_spec_quality` | **v0.2** | Heuristic coach — flags vague language, implementation-leak AC, unclear role refs (the differentiator vs Kiro / Spec Kit) |
 | `propose_spec_improvements` | **v0.2** | Take analyze output → PM-facing markdown with concrete rewrites |
 | `get_drift_report` | **v0.2.1** | For every spec with a stored ac_hash, fetch live + recompute + compare. Buckets results into fresh / drifted / unknown / stranded |
+| `auto_link_tests` | **v0.3.2** | Scan a test directory for `@spec: <ID>` tags in docstrings or comments and link them automatically. Python / JS / TS / Go supported. `dry_run` previews without writing |
 
-Still pending for full v0.2: Linear / JIRA adapters.
+Still pending for v0.3: optimization plan + spec-knowledge layer.
 
 ## Adapter status
 
@@ -97,7 +98,7 @@ Still pending for full v0.2: Linear / JIRA adapters.
 | `notion` | Notion databases (REST v1, blocks → markdown) | ✅ since 0.3.0 | `NOTION_TOKEN` + `SPEC_PROJECT_KEY=<database-id>` |
 | `figma` | Figma file frames (TEXT nodes + comments → markdown) | ✅ since 0.3.1 | `FIGMA_TOKEN` + `SPEC_PROJECT_KEY=<file-key>` |
 
-> v0.2 complete in 0.2.3. v0.3.0 added Notion; v0.3.1 adds Figma. Auto-link via test docstrings + optimization plan still pending.
+> v0.2 complete in 0.2.3. v0.3.0 added Notion; v0.3.1 Figma; v0.3.2 `auto_link_tests`. Optimization plan + spec-knowledge layer still pending.
 
 ## Walkthrough — spec → test → coverage
 
@@ -131,7 +132,7 @@ The traceability index now records all 4 links. Next sprint, when the spec chang
 |---|---|---|
 | v0.1 (MVP — markdown_local + github_issues, 7 tools) | June 2026 | ✅ Shipped |
 | v0.2 (Linear, JIRA, coverage matrix, spec-quality coach, drift report) | Aug 2026 | ✅ Complete (0.2.3) |
-| v0.3 (Notion, Figma, auto-link, optimization plan) | Oct 2026 | 🟡 Notion + Figma shipped (0.3.1); auto-link + optimization plan pending |
+| v0.3 (Notion, Figma, auto-link, optimization plan) | Oct 2026 | 🟡 Notion + Figma + auto-link shipped (0.3.2); optimization plan pending |
 | v1.0 (production-ready, docs, integration recipes) | Q4 2026 | ⬜ |
 
 ## Family

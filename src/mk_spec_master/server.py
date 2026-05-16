@@ -20,6 +20,7 @@ from .tools import specs as specs_tools
 from .tools import scenarios as scenarios_tools
 from .tools import coverage as coverage_tools
 from .tools import quality as quality_tools
+from .tools import auto_link as auto_link_tools
 
 app = Server("mk-spec-master")
 
@@ -44,6 +45,7 @@ _DISPATCH: dict[str, Callable[[dict], dict]] = {
     "get_drift_report": coverage_tools.get_drift_report_tool,
     "analyze_spec_quality": quality_tools.analyze_spec_quality_tool,
     "propose_spec_improvements": quality_tools.propose_spec_improvements_tool,
+    "auto_link_tests": auto_link_tools.auto_link_tests_tool,
 }
 
 
@@ -293,6 +295,39 @@ async def list_tools() -> list[Tool]:
                     },
                     "spec_id": {"type": "string"},
                     "raw_text": {"type": "string"},
+                },
+            },
+        ),
+        Tool(
+            name="auto_link_tests",
+            description=(
+                "Scan a directory of test files for `@spec: <ID>` tags in "
+                "docstrings or comments and call link_test_to_spec for each "
+                "(test, spec) pair found. Supports Python (`def test_*`), "
+                "JS/TS (`it('...')` / `test('...')`), and Go (`func "
+                "TestX(t *testing.T)`). For each tag the nearest preceding "
+                "test function within 30 lines is treated as the owner; "
+                "test_node_id is `<relative-path>::<test-name>`. "
+                "Use when a user says 'rebuild the spec coverage' or "
+                "'sync test → spec links after the refactor'. Set "
+                "`dry_run: true` to preview without writing. "
+                "Returns {test_dir, files_scanned, tags_found, "
+                "links_added, links_updated, skipped, discoveries[], "
+                "markdown, dry_run}."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "test_dir": {
+                        "type": "string",
+                        "description": "Absolute path to scan. Defaults to SPEC_PROJECT_ROOT/tests, falling back to SPEC_PROJECT_ROOT.",
+                    },
+                    "languages": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["python", "js", "go"]},
+                        "description": "Subset of supported languages. Default: all three.",
+                    },
+                    "dry_run": {"type": "boolean", "default": False},
                 },
             },
         ),
