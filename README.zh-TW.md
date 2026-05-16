@@ -20,7 +20,7 @@
 
 > 一個 spec-driven testing 的 MCP server。把 Linear / JIRA / GitHub Issues / Notion / Figma / Markdown 上的規格轉成可執行的測試場景、交給 [`mk-qa-master`](https://github.com/kao273183/mk-qa-master) 或任何測試 runner，並維持一份即時的 spec ↔ test 覆蓋矩陣。
 
-> **🟢 Alpha — v0.3 partial。** 11 個 tool + **6 個 adapter**（markdown_local、github_issues、linear、jira、notion、figma）。完整設計見 [`docs/prd.md`](docs/prd.md)。v0.3 還缺：auto-link via docstring、optimization plan。
+> **🟢 Alpha — v0.3 partial。** **12 個 tool** + 6 個 adapter。完整設計見 [`docs/prd.md`](docs/prd.md)。v0.3 還缺：optimization plan + 領域知識層。
 
 ---
 
@@ -83,8 +83,9 @@ MCP client config 加上：
 | `analyze_spec_quality` | **v0.2** | 啟發式教練——抓模糊用詞、實作細節洩漏、未定義的角色（這就是相對 Kiro / Spec Kit 的差異化護城河） |
 | `propose_spec_improvements` | **v0.2** | 把 analyze 輸出整理成 PM 可直接照做的 markdown 改寫建議 |
 | `get_drift_report` | **v0.2.1** | 對每個有存 ac_hash 的 spec 重新 fetch 比對，分 fresh / drifted / unknown / stranded 四格 |
+| `auto_link_tests` | **v0.3.2** | 掃 test 資料夾抓 `@spec: <ID>` tag（在 docstring / 註解皆可），自動 link。支援 Python / JS / TS / Go。`dry_run` 預覽不寫 index |
 
-v0.2 還在做的：Linear / JIRA adapter。
+v0.3 還缺：optimization plan + 領域知識層。
 
 ## Adapter 狀態
 
@@ -97,7 +98,7 @@ v0.2 還在做的：Linear / JIRA adapter。
 | `notion` | Notion databases（REST v1、blocks → markdown） | ✅ 0.3.0 起 | `NOTION_TOKEN` + `SPEC_PROJECT_KEY=<database-id>` |
 | `figma` | Figma frames（TEXT 節點 + comments → markdown） | ✅ 0.3.1 起 | `FIGMA_TOKEN` + `SPEC_PROJECT_KEY=<file-key>` |
 
-> v0.2 在 0.2.3 完成。v0.3.0 加 Notion；v0.3.1 加 Figma。auto-link + optimization plan 還沒做。
+> v0.2 在 0.2.3 完成。v0.3.0 加 Notion；v0.3.1 加 Figma；v0.3.2 加 `auto_link_tests`。optimization plan + 領域知識層還沒做。
 
 ## 範例流程——spec → test → coverage
 
