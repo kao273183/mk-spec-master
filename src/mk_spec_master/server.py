@@ -21,6 +21,8 @@ from .tools import scenarios as scenarios_tools
 from .tools import coverage as coverage_tools
 from .tools import quality as quality_tools
 from .tools import auto_link as auto_link_tools
+from .tools import optimization as optimization_tools
+from .tools import spec_knowledge as spec_knowledge_tools
 
 app = Server("mk-spec-master")
 
@@ -46,6 +48,9 @@ _DISPATCH: dict[str, Callable[[dict], dict]] = {
     "analyze_spec_quality": quality_tools.analyze_spec_quality_tool,
     "propose_spec_improvements": quality_tools.propose_spec_improvements_tool,
     "auto_link_tests": auto_link_tools.auto_link_tests_tool,
+    "get_optimization_plan": optimization_tools.get_optimization_plan_tool,
+    "init_spec_knowledge": spec_knowledge_tools.init_spec_knowledge_tool,
+    "get_spec_context": spec_knowledge_tools.get_spec_context_tool,
 }
 
 
@@ -328,6 +333,72 @@ async def list_tools() -> list[Tool]:
                         "description": "Subset of supported languages. Default: all three.",
                     },
                     "dry_run": {"type": "boolean", "default": False},
+                },
+            },
+        ),
+        Tool(
+            name="get_optimization_plan",
+            description=(
+                "Three-layer coach output that integrates coverage / "
+                "quality / drift signals into one prioritized markdown "
+                "plan. Layer 1 surfaces untested + thin-coverage specs; "
+                "Layer 2 ranks specs by severity-weighted quality findings; "
+                "Layer 3 surfaces drifted + stranded specs. Use this when "
+                "a user asks 'what should we fix next' / 'show me the "
+                "weekly plan' / 'review the suite'. "
+                "Toggle layers via include_coverage / include_quality / "
+                "include_drift booleans (all default true). top_n caps "
+                "per-layer detail rows (default 10). "
+                "Returns {specs_total, *_count, *[], markdown}."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "include_coverage": {"type": "boolean", "default": True},
+                    "include_quality": {"type": "boolean", "default": True},
+                    "include_drift": {"type": "boolean", "default": True},
+                    "top_n": {"type": "integer", "default": 10},
+                },
+            },
+        ),
+        Tool(
+            name="init_spec_knowledge",
+            description=(
+                "Create SPEC_PROJECT_ROOT/spec-knowledge.md from a starter "
+                "template. The file carries spec methodology (EARS, INVEST, "
+                "AC quality rules) plus TODO sections for the team's domain "
+                "rules / actors / glossary. Other mk-spec-master tools "
+                "lean on this indirectly via get_spec_context. Idempotent "
+                "— refuses to overwrite an existing file unless "
+                "overwrite=true. Optional project_name labels the file."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "project_name": {"type": "string"},
+                    "overwrite": {"type": "boolean", "default": False},
+                },
+            },
+        ),
+        Tool(
+            name="get_spec_context",
+            description=(
+                "Read SPEC_PROJECT_ROOT/spec-knowledge.md (or fall back to "
+                "built-in defaults if missing). Call near the start of a "
+                "session so the same methodology + domain glossary colours "
+                "every spec interpretation that follows. Optional "
+                "`section` filters to a single heading (partial-match, "
+                "case-insensitive) — e.g. section='actors' returns just "
+                "the actors block. "
+                "Returns {source: 'file'|'builtin', content, ...}."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "section": {
+                        "type": "string",
+                        "description": "Optional heading filter (partial match, case-insensitive).",
+                    },
                 },
             },
         ),

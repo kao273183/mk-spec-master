@@ -176,4 +176,4 @@ def test_server_dispatch_table_covers_all_seven_tools():
         f"declared - dispatched = {declared - dispatched}; "
         f"dispatched - declared = {dispatched - declared}"
     )
-    assert len(declared) == 12  # v0.3.2: + auto_link_tests
+    assert len(declared) == 15  # v0.3.3: + optimization + init_spec_knowledge + get_spec_context
