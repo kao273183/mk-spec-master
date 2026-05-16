@@ -27,3 +27,4 @@ from . import github_issues  # noqa: E402, F401
 from . import linear  # noqa: E402, F401
 from . import jira  # noqa: E402, F401
 from . import notion  # noqa: E402, F401
+from . import figma  # noqa: E402, F401
