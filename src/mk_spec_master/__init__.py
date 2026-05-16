@@ -1,3 +1,3 @@
 """mk-spec-master — spec → test bridge MCP server."""
 
-__version__ = "0.3.4"
+__version__ = "0.4.0"

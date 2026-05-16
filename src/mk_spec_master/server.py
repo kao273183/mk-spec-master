@@ -1,8 +1,12 @@
-"""MCP entrypoint. Registers + dispatches the v0.2 tool surface.
+"""MCP entrypoint. Registers + dispatches the v0.4 tool surface.
 
 Tool descriptions are written to read like operating manuals — they tell
 the AI client when to call this vs another tool, what shape comes back,
 and which downstream tool (often mk-qa-master) to hand off to.
+
+v0.4 adds a telemetry wrapper around dispatch so get_telemetry can
+surface usage / error patterns; only tool name + duration + ok flag are
+recorded (no argument values).
 """
 
 import asyncio
@@ -23,6 +27,8 @@ from .tools import quality as quality_tools
 from .tools import auto_link as auto_link_tools
 from .tools import optimization as optimization_tools
 from .tools import spec_knowledge as spec_knowledge_tools
+from .tools import history as history_tools
+from .tools import telemetry as telemetry_tools
 
 app = Server("mk-spec-master")
 
@@ -51,6 +57,9 @@ _DISPATCH: dict[str, Callable[[dict], dict]] = {
     "get_optimization_plan": optimization_tools.get_optimization_plan_tool,
     "init_spec_knowledge": spec_knowledge_tools.init_spec_knowledge_tool,
     "get_spec_context": spec_knowledge_tools.get_spec_context_tool,
+    "get_spec_history": history_tools.get_spec_history_tool,
+    "get_drift_signature": history_tools.get_drift_signature_tool,
+    "get_telemetry": telemetry_tools.get_telemetry_tool,
 }
 
 
@@ -402,6 +411,70 @@ async def list_tools() -> list[Tool]:
                 },
             },
         ),
+        Tool(
+            name="get_spec_history",
+            description=(
+                "Return the last N snapshots archived by get_optimization_plan "
+                "plus trend deltas (current vs ~7 days ago, vs ~30 days ago) "
+                "for spec count, untested, quality findings, drift, stranded, "
+                "and unknown-hash specs. Use when a user asks 'are we "
+                "improving' / 'show me the trend' / 'how did we do this "
+                "month'. Requires at least 2 snapshots for trend; degrades "
+                "gracefully with fewer. "
+                "Returns {snapshots_total, snapshots[], trend[], markdown}."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "limit": {"type": "integer", "default": 10},
+                },
+            },
+        ),
+        Tool(
+            name="get_drift_signature",
+            description=(
+                "Scan the recent snapshot history for chronic problems: "
+                "same spec_id repeatedly appearing in drifted / unknown / "
+                "low-quality buckets. Specs flagged as 'unstable' (drifts "
+                "every cycle), 'chronic_low_quality' (vague every cycle), "
+                "or 'chronic_unhashed' (never gets a hash recorded). "
+                "Use when a user asks 'which specs keep causing trouble' / "
+                "'what's the long-running pain'. "
+                "Args: window (snapshots to scan, default 5), threshold "
+                "(min recurrence to flag, default 3). "
+                "Returns {ready, snapshots_scanned, chronic[], markdown}."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "window": {"type": "integer", "default": 5},
+                    "threshold": {"type": "integer", "default": 3},
+                },
+            },
+        ),
+        Tool(
+            name="get_telemetry",
+            description=(
+                "Aggregate the tool-usage log written by this server. "
+                "Surfaces: which tools are called most, which fail most "
+                "(error rate), p50 / p95 latency per tool, and which "
+                "declared tools have never been called in the window "
+                "(dead surface). Records contain only tool name + timing "
+                "+ ok flag — argument values are never logged. "
+                "Use when a user asks 'what's the AI actually using' / "
+                "'which tools are slow' / 'which tools are unused'. "
+                "Args: days (window, default 30), include_inactive (bool, "
+                "default true). "
+                "Returns {records_total, window_days, tools[], inactive[], markdown}."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "days": {"type": "integer", "default": 30},
+                    "include_inactive": {"type": "boolean", "default": True},
+                },
+            },
+        ),
     ]
 
 
@@ -411,16 +484,19 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     if handler is None:
         return [_text({"error": f"unknown tool: {name}", "available": sorted(_DISPATCH)})]
 
-    try:
-        result = handler(arguments or {})
-    except Exception as exc:
-        # Surface a structured error rather than letting the MCP transport
-        # swallow the exception silently.
-        result = {
-            "error": str(exc),
-            "error_type": type(exc).__name__,
-            "tool": name,
-        }
+    # v0.4: wrap dispatch in a telemetry timer. Records {tool, ok,
+    # duration_ms, timestamp} to telemetry.jsonl — never argument values.
+    with telemetry_tools._Timer(name):
+        try:
+            result = handler(arguments or {})
+        except Exception as exc:
+            # Surface a structured error rather than letting the MCP transport
+            # swallow the exception silently.
+            result = {
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+                "tool": name,
+            }
     return [_text(result)]
 
 

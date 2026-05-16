@@ -25,5 +25,13 @@ FIGMA_TOKEN = os.getenv("FIGMA_TOKEN", "")
 INDEX_DIR = PROJECT_ROOT / ".mk-spec-master"
 INDEX_PATH = INDEX_DIR / "index.json"
 
+# Self-reinforcement storage (v0.4+):
+# - HISTORY_DIR holds one JSON snapshot per get_optimization_plan call so
+#   trend tools can compare "now" against "two weeks ago".
+# - TELEMETRY_PATH is a JSONL append-only log of tool invocations so
+#   get_telemetry can surface usage / error patterns.
+HISTORY_DIR = INDEX_DIR / "history"
+TELEMETRY_PATH = INDEX_DIR / "telemetry.jsonl"
+
 # Where local markdown specs live (markdown_local adapter only).
 SPECS_DIR = PROJECT_ROOT / "specs"
