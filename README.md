@@ -15,6 +15,7 @@
 <p align="center">
   <a href="https://pypi.org/project/mk-spec-master/"><img src="https://img.shields.io/pypi/v/mk-spec-master.svg?logo=pypi&logoColor=white&color=3775A9" alt="PyPI" /></a>
   <a href="https://github.com/kao273183/mk-spec-master/actions/workflows/ci.yml"><img src="https://github.com/kao273183/mk-spec-master/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://glama.ai/mcp/servers/kao273183/mk-spec-master"><img src="https://glama.ai/mcp/servers/kao273183/mk-spec-master/badges/score.svg" alt="Glama score" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
   <img src="https://img.shields.io/badge/status-alpha-orange.svg" alt="Status: Alpha" />
 </p>
